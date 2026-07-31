@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARBLE RUSH™ - Concept Engine 3D</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #080810;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            user-select: none;
+        }
+        #webgl-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        .glass-panel {
+            background: rgba(13, 16, 27, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .glass-button {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        .glass-button.active {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(245, 158, 11, 0.8));
+            border-color: #f59e0b;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .speedometer-ring {
+            stroke-dasharray: 283;
+            transition: stroke-dashoffset 0.1s linear;
+        }
+        .race-chip {
+            background: rgba(5, 8, 18, 0.78);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+        }
+        .touch-control {
+            width: 54px;
+            height: 54px;
+            border-radius: 999px;
+            background: rgba(10, 14, 25, 0.72);
+            border: 1px solid rgba(255,255,255,.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 18px;
+            touch-action: none;
+        }
+        .touch-control:active { transform: scale(.94); background: rgba(245,158,11,.42); }
+        #race-message { text-shadow: 0 2px 18px rgba(0,0,0,.9); }
+    </style>
+</head>
+<body class="text-white overflow-hidden select-none">
+
+    <!-- 3D Viewport -->
+    <div id="webgl-container"></div>
+
+    <div class="relative z-10 w-full h-screen pointer-events-none flex flex-col justify-between p-4 md:p-6">
+
+        <!-- Top Header Navigation & Status -->
+        <header class="flex justify-between items-center pointer-events-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-red-600 to-purple-600 flex items-center justify-center font-black text-xl shadow-lg shadow-amber-500/30 border border-amber-300/40">
+                    MR
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-400 to-red-500">
+                        MARBLE RUSH<span class="text-xs align-super text-amber-400 font-normal">™ AAA</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 tracking-wider">NEXT-GEN PHYSICS & VISUAL EXPERIENCE</p>
+                </div>
+            </div>
+
+            <!-- Global Quick Stats & Weather Badge -->
+            <div class="hidden md:flex items-center gap-4 glass-panel px-4 py-2 rounded-2xl border border-white/10 text-xs">
+                <div class="flex items-center gap-2 text-amber-400">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>FPS: <strong id="fps-counter" class="text-white">60</strong></span>
+                </div>
+                <div class="h-4 w-[1px] bg-white/20"></div>
+                <div class="flex items-center gap-2 text-blue-400">
+                    <i class="fa-solid fa-cloud-sun-rain" id="weather-icon"></i>
+                    <span id="environment-label" class="text-white">Vulcão em Erupção</span>
+                </div>
+                <div class="h-4 w-[1px] bg-white/20"></div>
+                <div class="flex items-center gap-2 text-purple-400">
+                    <i class="fa-solid fa-atom"></i>
+                    <span>Física: <strong class="text-white">60 Hz</strong></span>
+                </div>
+            </div>
+
+            <!-- Sound & Settings Quick Toggles -->
+            <div class="flex items-center gap-2">
+                <button id="btn-audio" class="glass-button w-10 h-10 rounded-xl flex items-center justify-center text-slate-200" title="Ativar/Desativar Som">
+                    <i class="fa-solid fa-volume-high" id="audio-icon"></i>
+                </button>
+                <button id="btn-announcer" class="glass-button px-3 h-10 rounded-xl flex items-center gap-2 text-xs font-semibold text-amber-300 border border-amber-500/30 transition-all duration-300">
+                    <i class="fa-solid fa-microphone-lines" id="announcer-icon"></i>
+                    <span class="hidden sm:inline" id="announcer-btn-text">Comentador IA</span>
+                </button>
+                <button id="btn-cam" class="glass-button px-3 h-10 rounded-xl flex items-center gap-2 text-xs font-semibold text-slate-200">
+                    <i class="fa-solid fa-video"></i>
+                    <span class="hidden sm:inline" id="cam-mode-text">Câmara: Seguir</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Subtitle Toast Notification for AI Announcer -->
+        <div id="announcer-toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-panel px-6 py-3 rounded-2xl border border-amber-500/40 shadow-xl shadow-amber-500/10 flex items-center gap-3 max-w-lg w-11/12 text-center transition-all duration-500 opacity-0 pointer-events-none transform -translate-y-4">
+            <div class="p-2 rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+                <i class="fa-solid fa-bullhorn text-lg animate-pulse"></i>
+            </div>
+            <div class="text-left">
+                <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Comentador Desportivo IA</p>
+                <p id="announcer-toast-text" class="text-xs md:text-sm font-semibold text-white leading-snug"></p>
+            </div>
+        </div>
+
+        <!-- Center Prompt Modal (Triggered by AI Track Generator) -->
+        <div id="ai-modal" class="self-center my-auto w-full max-w-xl glass-panel p-6 rounded-3xl pointer-events-auto border border-amber-500/30 shadow-2xl shadow-amber-500/10 transition-all duration-300 hidden max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 rounded-lg bg-amber-500/20 text-amber-400">
+                        <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Criador de Pistas Gemini 3.0 & Imagen 4</h3>
+                        <p class="text-[10px] text-amber-400 font-mono">POWERED BY GEMINI FLASH & IMAGEN API</p>
+                    </div>
+                </div>
+                <button id="btn-close-ai" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-xs text-slate-300 mb-3">
+                Descreva a pista dos seus sonhos. O Gemini gera a geometria 3D, atmosfera e comentário desportivo, e o Imagen 4 cria a arte concetual.
+            </p>
+            <div class="relative mb-3">
+                <input type="text" id="ai-prompt-input" placeholder="Ex: Uma fábrica de chocolate futurista com cascatas de cacau e tubos de néon..." 
+                    class="w-full bg-black/60 border border-white/20 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 pr-28">
+                <button id="btn-generate-track" class="absolute right-1 top-1 bottom-1 px-4 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg text-xs font-bold hover:brightness-110 transition flex items-center gap-1">
+                    <i class="fa-solid fa-bolt"></i> Criar com IA
+                </button>
+            </div>
+
+            <!-- AI Status & Concept Art Container -->
+            <div id="ai-status-container" class="hidden mb-3 p-3 bg-black/40 rounded-xl border border-white/10 text-xs text-slate-300">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" id="ai-spinner"></div>
+                    <span id="ai-status-text" class="font-semibold text-amber-300">Gemini a calcular curvatura 3D...</span>
+                </div>
+                <!-- Concept Art Preview Image -->
+                <div id="concept-art-wrapper" class="relative rounded-lg overflow-hidden border border-amber-500/30 hidden">
+                    <img id="concept-art-img" class="w-full h-36 object-cover" alt="Arte Concetual da Pista">
+                    <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-[10px] text-amber-300 font-bold flex justify-between items-center">
+                        <span><i class="fa-solid fa-image"></i> Concept Art em Tempo Real (Imagen 4)</span>
+                        <span id="ai-track-title-badge" class="bg-amber-500/30 px-2 py-0.5 rounded text-white"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 text-[11px] text-slate-400">
+                <span class="text-slate-500">Sugestões:</span>
+                <button class="prompt-chip bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md text-slate-300 border border-white/10">
+                    🍫 Fábrica de chocolate com tubos de néon
+                </button>
+                <button class="prompt-chip bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md text-slate-300 border border-white/10">
+                    🌋 Vulcão com cascatas de magma e tubos de plasma
+                </button>
+                <button class="prompt-chip bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md text-slate-300 border border-white/10">
+                    🇵🇹 Circuito de Lisboa com calçada de ouro
+                </button>
+                <button class="prompt-chip bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md text-slate-300 border border-white/10">
+                    🚀 Estação espacial em gravidade zero com túneis de luz
+                </button>
+            </div>
+        </div>
+
+        <!-- AI Engineer Drawer Modal -->
+        <div id="engineer-modal" class="fixed right-4 top-20 bottom-24 w-80 md:w-96 glass-panel rounded-3xl p-4 pointer-events-auto border border-blue-500/30 shadow-2xl flex flex-col z-20 hidden">
+            <div class="flex justify-between items-center pb-3 border-b border-white/10 mb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-white">Engenheiro de Berlindes IA</h4>
+                        <p class="text-[10px] text-blue-300">Gemini 3.1 Flash Specialist</p>
+                    </div>
+                </div>
+                <button id="btn-close-engineer" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Chat log -->
+            <div id="engineer-chat-log" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs text-slate-200">
+                <div class="bg-blue-950/40 border border-blue-500/20 p-2.5 rounded-xl">
+                    👋 Olá! Sou o teu Engenheiro de Pistas e Física do **MARBLE RUSH™**. Pergunta-me sobre materiais, táticas de velocidade ou personalização!
+                </div>
+            </div>
+
+            <!-- Input area -->
+            <div class="pt-3 border-t border-white/10 mt-2 flex flex-col gap-2">
+                <div class="flex gap-1 overflow-x-auto pb-1 text-[10px]">
+                    <button class="eng-chip whitespace-nowrap bg-white/5 hover:bg-white/10 px-2 py-1 rounded text-slate-300 border border-white/10">
+                        ⚡ Melhor berlinde para alta velocidade?
+                    </button>
+                    <button class="eng-chip whitespace-nowrap bg-white/5 hover:bg-white/10 px-2 py-1 rounded text-slate-300 border border-white/10">
+                        🌋 História do Berlinde de Lava
+                    </button>
+                </div>
+                <div class="relative">
+                    <input type="text" id="engineer-input" placeholder="Pergunta ao Engenheiro IA..." 
+                        class="w-full bg-black/60 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-400 pr-16">
+                    <button id="btn-send-engineer" class="absolute right-1 top-1 bottom-1 px-3 bg-blue-600 rounded-lg text-xs font-bold hover:bg-blue-500 transition">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Playable Race HUD -->
+        <div class="fixed top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2">
+            <div class="race-chip rounded-2xl px-3 py-2 flex items-center gap-3 text-xs">
+                <span class="text-slate-400">POSIÇÃO <strong id="race-position" class="text-white text-base ml-1">1/4</strong></span>
+                <span class="w-px h-5 bg-white/15"></span>
+                <span class="text-slate-400">VOLTA <strong id="race-lap" class="text-amber-300 text-base ml-1">1/3</strong></span>
+                <span class="w-px h-5 bg-white/15"></span>
+                <span class="text-slate-400">CHECKPOINT <strong id="race-checkpoint" class="text-cyan-300 text-base ml-1">0/3</strong></span>
+            </div>
+            <div id="race-message" class="text-center text-sm font-black tracking-wider text-white transition-opacity duration-300">
+                ← → ou A/D para dirigir • ESPAÇO para turbo
+            </div>
+        </div>
+
+        <!-- Touch controls -->
+        <div class="fixed left-4 bottom-28 z-30 pointer-events-auto flex gap-2 md:hidden">
+            <button id="touch-left" class="touch-control" aria-label="Virar à esquerda"><i class="fa-solid fa-arrow-left"></i></button>
+            <button id="touch-right" class="touch-control" aria-label="Virar à direita"><i class="fa-solid fa-arrow-right"></i></button>
+        </div>
+        <div class="fixed right-4 bottom-28 z-30 pointer-events-auto md:hidden">
+            <button id="touch-boost" class="touch-control text-amber-300" aria-label="Turbo"><i class="fa-solid fa-bolt"></i></button>
+        </div>
+
+        <!-- HUD Bottom Bar: Controls, Marble & Environment Selector -->
+        <footer class="flex flex-col md:flex-row items-end md:items-center justify-between gap-4 pointer-events-auto w-full">
+            
+            <!-- Left Panel: Speedometer & Controls -->
+            <div class="glass-panel p-3 rounded-2xl flex items-center gap-4 border border-white/10 min-w-[200px]">
+                <div class="relative w-16 h-16 flex items-center justify-center">
+                    <svg class="w-16 h-16 transform -rotate-90">
+                        <circle cx="32" cy="32" r="26" stroke="currentColor" stroke-width="4" class="text-white/10" fill="transparent" />
+                        <circle id="speed-meter" cx="32" cy="32" r="26" stroke="currentColor" stroke-width="4" class="text-amber-400 speedometer-ring" fill="transparent" stroke-dashoffset="200" />
+                    </svg>
+                    <div class="absolute flex flex-col items-center">
+                        <span id="speed-value" class="text-lg font-black leading-none">0</span>
+                        <span class="text-[9px] text-slate-400 uppercase">km/h</span>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <button id="btn-restart" class="glass-button px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-amber-300">
+                        <i class="fa-solid fa-rotate-right"></i> Lançar Berlinde
+                    </button>
+                    <button id="btn-boost" class="glass-button px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 text-orange-400">
+                        <i class="fa-solid fa-fire-flame-curved"></i> Turbo Boost
+                    </button>
+                </div>
+            </div>
+
+            <!-- Center Panel: Tabs for Customization -->
+            <div class="glass-panel p-2 rounded-2xl flex items-center gap-2 border border-white/10 overflow-x-auto max-w-full">
+                <!-- Marble Selector Dropdown/Buttons -->
+                <div class="flex items-center gap-1 bg-black/40 p-1 rounded-xl">
+                    <button class="marble-btn glass-button active px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5" data-material="lava">
+                        🔥 Lava
+                    </button>
+                    <button class="marble-btn glass-button px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5" data-material="cristal">
+                        💎 Cristal
+                    </button>
+                    <button class="marble-btn glass-button px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5" data-material="energia">
+                        ⚡ Energia
+                    </button>
+                    <button class="marble-btn glass-button px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5" data-material="galaxie">
+                        🌌 Galáxia
+                    </button>
+                    <button class="marble-btn glass-button px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5" data-material="ouro">
+                        🥇 Ouro
+                    </button>
+                    <button class="marble-btn glass-button px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5" data-material="arcoiris">
+                        🌈 Arco-Íris
+                    </button>
+                </div>
+
+                <div class="h-6 w-[1px] bg-white/20"></div>
+
+                <!-- Environment Selector -->
+                <div class="flex items-center gap-1 bg-black/40 p-1 rounded-xl">
+                    <button class="env-btn glass-button active px-3 py-1.5 rounded-lg text-xs font-semibold" data-env="volcano">
+                        🌋 Vulcão
+                    </button>
+                    <button class="env-btn glass-button px-3 py-1.5 rounded-lg text-xs font-semibold" data-env="ice">
+                        ❄️ Gelado
+                    </button>
+                    <button class="env-btn glass-button px-3 py-1.5 rounded-lg text-xs font-semibold" data-env="space">
+                        🚀 Espaço
+                    </button>
+                    <button class="env-btn glass-button px-3 py-1.5 rounded-lg text-xs font-semibold" data-env="portugal">
+                        🇵🇹 Portugal
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: AI & Graphics Toggle -->
+            <div class="flex items-center gap-2">
+                <button id="btn-open-engineer" class="glass-button px-3 py-3 rounded-2xl flex items-center gap-2 text-xs font-bold bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-500/40 text-blue-300">
+                    <i class="fa-solid fa-robot"></i>
+                    <span class="hidden sm:inline">Engenheiro IA</span>
+                </button>
+                <button id="btn-open-ai" class="glass-button px-4 py-3 rounded-2xl flex items-center gap-2 text-xs font-bold bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/40 text-amber-300">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>IA Track Builder</span>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- SOUND ENGINE & GEMINI TTS SYNTHESIZER ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = false;
+                this.rollOsc = null;
+                this.rollGain = null;
+                this.currentAudioElem = null;
+            }
+
+            init() {
+                if (this.ctx) {
+                    if (this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                    return;
+                }
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                    this.enabled = true;
+                    this.setupRollSynth();
+                } catch (e) {
+                    console.log("Audio API não suportado");
+                }
+            }
+
+            setupRollSynth() {
+                if (!this.ctx) return;
+                const bufferSize = this.ctx.sampleRate * 2;
+                const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+
+                const whiteNoise = this.ctx.createBufferSource();
+                whiteNoise.buffer = noiseBuffer;
+                whiteNoise.loop = true;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 400;
+                filter.Q.value = 3.0;
+
+                this.rollGain = this.ctx.createGain();
+                this.rollGain.gain.value = 0;
+
+                whiteNoise.connect(filter);
+                filter.connect(this.rollGain);
+                this.rollGain.connect(this.ctx.destination);
+
+                whiteNoise.start();
+            }
+
+            updateRollSound(speed) {
+                if (!this.enabled || !this.rollGain) return;
+                const normalizedSpeed = Math.min(speed / 80, 1);
+                this.rollGain.gain.setTargetAtTime(normalizedSpeed * 0.15, this.ctx.currentTime, 0.05);
+            }
+
+            playImpact(volume = 0.5) {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.1);
+
+                gain.gain.setValueAtTime(volume * 0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+
+            playBoost() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.3);
+
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playWavBlob(blob) {
+                if (this.currentAudioElem) {
+                    this.currentAudioElem.pause();
+                }
+                const url = URL.createObjectURL(blob);
+                const audio = new Audio(url);
+                this.currentAudioElem = audio;
+                audio.play().catch(e => console.log("Audio play error:", e));
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        const API_KEY = ""; // Canvas runtime environment auto-injects key
+
+        async function fetchWithBackoff(url, options, maxRetries = 3) {
+            let delay = 1000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status === 429) {
+                        await new Promise(r => setTimeout(r, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    return await response.json();
+                } catch (err) {
+                    if (i === maxRetries - 1) throw err;
+                    await new Promise(r => setTimeout(r, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // 1. LLM 3D Track Generation (gemini-3-flash-preview)
+        async function generateTrackDataWithGemini(prompt) {
+            if (!API_KEY) throw new Error("Gemini API não configurada; usar gerador local.");
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
+            const systemPrompt = "Tu és um engenheiro de nível AAA especializado em pistas de corridas 3D de berlindes. Gera pontos de spline 3D continuos, tema visual e comentário de comentador desportivo em Português.";
+
+            const payload = {
+                contents: [{ parts: [{ text: `Cria uma pista 3D detalhada para a ideia: "${prompt}". Retorna obrigatoriamente um objeto JSON válido.` }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            trackTitle: { type: "STRING" },
+                            theme: { type: "STRING", enum: ["volcano", "ice", "space", "portugal"] },
+                            announcerLine: { type: "STRING" },
+                            conceptArtPrompt: { type: "STRING" },
+                            fogColorHex: { type: "STRING" },
+                            points: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        x: { type: "NUMBER" },
+                                        y: { type: "NUMBER" },
+                                        z: { type: "NUMBER" }
+                                    },
+                                    required: ["x", "y", "z"]
+                                }
+                            }
+                        },
+                        required: ["trackTitle", "theme", "announcerLine", "conceptArtPrompt", "points"]
+                    }
+                }
+            };
+
+            const data = await fetchWithBackoff(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            return JSON.parse(jsonText);
+        }
+
+        // 2. Imagen 4 Concept Art Generation (imagen-4.0-generate-001)
+        async function generateConceptArtWithImagen(prompt) {
+            if (!API_KEY) return null;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${API_KEY}`;
+            const payload = {
+                instances: [{ prompt: `Epic AAA video game concept art of a marble racing track: ${prompt}, highly detailed, raytracing lighting, 8k resolution, cinematic` }],
+                parameters: { sampleCount: 1 }
+            };
+
+            const data = await fetchWithBackoff(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const base64Bytes = data.predictions?.[0]?.bytesBase64Encoded;
+            return base64Bytes ? `data:image/png;base64,${base64Bytes}` : null;
+        }
+
+        // 3. Gemini TTS Announcer Voice (gemini-2.5-flash-preview-tts)
+        async function speakAnnouncerLine(textPrompt) {
+            sound.init();
+
+            const announcerBtn = document.getElementById('btn-announcer');
+            const announcerIcon = document.getElementById('announcer-icon');
+            const announcerText = document.getElementById('announcer-btn-text');
+            const toast = document.getElementById('announcer-toast');
+            const toastText = document.getElementById('announcer-toast-text');
+
+            // Show Toast Subtitle
+            if (toast && toastText) {
+                toastText.textContent = `"${textPrompt}"`;
+                toast.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none');
+                toast.classList.add('opacity-100', 'translate-y-0');
+            }
+
+            // Visual loading state on button
+            if (announcerBtn && announcerIcon && announcerText) {
+                announcerBtn.classList.add('bg-amber-500/30', 'border-amber-400');
+                announcerIcon.className = "fa-solid fa-spinner animate-spin text-amber-300";
+                announcerText.textContent = "A gerar voz...";
+            }
+
+            if (!API_KEY && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(textPrompt);
+                utterance.lang = 'pt-PT';
+                utterance.rate = 1.08;
+                utterance.pitch = 1.08;
+                window.speechSynthesis.speak(utterance);
+                if (announcerIcon && announcerText) {
+                    announcerIcon.className = "fa-solid fa-wave-square animate-pulse text-green-400";
+                    announcerText.textContent = "A falar...";
+                }
+                setTimeout(() => {
+                    if (announcerBtn && announcerIcon && announcerText) {
+                        announcerBtn.classList.remove('bg-amber-500/30');
+                        announcerIcon.className = "fa-solid fa-microphone-lines text-amber-300";
+                        announcerText.textContent = "Comentador IA";
+                    }
+                }, 3500);
+                setTimeout(() => {
+                    if (toast) {
+                        toast.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
+                        toast.classList.remove('opacity-100', 'translate-y-0');
+                    }
+                }, 5500);
+                return;
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
+            const payload = {
+                contents: [{
+                    parts: [{ text: `Diz com entusiasmo vibrante de um comentador desportivo de corridas: "${textPrompt}"` }]
+                }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Puck" }
+                        }
+                    }
+                }
+            };
+
+            try {
+                const result = await fetchWithBackoff(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const base64Audio = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                if (base64Audio && mimeType) {
+                    const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 24000;
+                    
+                    const binaryString = atob(base64Audio);
+                    const len = binaryString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    
+                    const pcm16 = new Int16Array(bytes.buffer);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+
+                    if (announcerIcon && announcerText) {
+                        announcerIcon.className = "fa-solid fa-wave-square animate-pulse text-green-400";
+                        announcerText.textContent = "A falar...";
+                    }
+
+                    sound.playWavBlob(wavBlob);
+                }
+            } catch (e) {
+                console.log("Erro ao gerar comentário por áudio:", e);
+            } finally {
+                // Reset button state after 3 seconds and hide toast after 5 seconds
+                setTimeout(() => {
+                    if (announcerBtn && announcerIcon && announcerText) {
+                        announcerBtn.classList.remove('bg-amber-500/30');
+                        announcerIcon.className = "fa-solid fa-microphone-lines text-amber-300";
+                        announcerText.textContent = "Comentador IA";
+                    }
+                }, 3500);
+
+                setTimeout(() => {
+                    if (toast) {
+                        toast.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
+                        toast.classList.remove('opacity-100', 'translate-y-0');
+                    }
+                }, 5500);
+            }
+        }
+
+        function pcmToWav(pcm16, sampleRate = 24000) {
+            const buffer = new ArrayBuffer(44 + pcm16.length * 2);
+            const view = new DataView(buffer);
+            
+            function writeString(v, offset, str) {
+                for (let i = 0; i < str.length; i++) {
+                    v.setUint8(offset + i, str.charCodeAt(i));
+                }
+            }
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + pcm16.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, pcm16.length * 2, true);
+
+            let offset = 44;
+            for (let i = 0; i < pcm16.length; i++, offset += 2) {
+                view.setInt16(offset, pcm16[i], true);
+            }
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        // 4. Gemini AI Engineer Chat (gemini-3-flash-preview)
+        async function askAIEngineer(question) {
+            if (!API_KEY) {
+                const q = question.toLowerCase();
+                if (q.includes('veloc')) return "Para alta velocidade, usa o Berlinde de Energia e conserva o turbo para as descidas longas. Corrige a direção com movimentos curtos para não ultrapassares as proteções laterais.";
+                if (q.includes('lava')) return "O Berlinde de Lava foi criado para o circuito vulcânico: é pesado, estável e mantém velocidade nas curvas. O núcleo brilhante representa energia térmica comprimida.";
+                return "Modo local ativo: usa A/D ou as setas para dirigir, Espaço para turbo e R para reiniciar. A velocidade reage à inclinação real da pista.";
+            }
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
+            const systemPrompt = "És o Engenheiro Principal do MARBLE RUSH™ AAA. Responde com conhecimento técnico, paixão por corridas e tom amigável em Português em 2 ou 3 frases concisas.";
+
+            const payload = {
+                contents: [{ parts: [{ text: question }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            const data = await fetchWithBackoff(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "Desculpa, estou a ajustar a suspensão dos berlindes. Tenta novamente!";
+        }
+
+        let scene, camera, renderer, controls;
+        let marble, trackMesh, trackCurve;
+        let particlesSystem, environmentObjects = [];
+        let clock = new THREE.Clock();
+
+        let camMode = 'follow';
+        let currentMaterial = 'lava';
+        let currentEnv = 'volcano';
+        let speed = 0;
+        let trackProgress = 0.012;
+        let forwardVelocity = 0.00115;
+        let lateralOffset = 0;
+        let lateralVelocity = 0;
+        let isBoosted = false;
+        let boostUntil = 0;
+        let isFalling = false;
+        let fallVelocity = new THREE.Vector3();
+        let fallTimer = 0;
+        let lastSafeProgress = 0.012;
+        let raceLap = 1;
+        const totalLaps = 3;
+        const checkpointFractions = [0.25, 0.50, 0.75];
+        let nextCheckpoint = 0;
+        let raceFinished = false;
+        const TRACK_HALF_WIDTH = 5.25;
+        const keys = { left: false, right: false };
+        let opponents = [];
+
+        let frameCount = 0;
+        let lastFpsUpdate = performance.now();
+        let marbleMaterials = {};
+
+        function initThree() {
+            const container = document.getElementById('webgl-container');
+
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x0a050d, 0.012);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 20);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxDistance = 150;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+            scene.add(ambientLight);
+
+            const mainLight = new THREE.DirectionalLight(0xffaa55, 2.5);
+            mainLight.position.set(40, 60, 20);
+            mainLight.castShadow = true;
+            mainLight.shadow.mapSize.width = 2048;
+            mainLight.shadow.mapSize.height = 2048;
+            mainLight.shadow.camera.near = 0.5;
+            mainLight.shadow.camera.far = 300;
+            const d = 50;
+            mainLight.shadow.camera.left = -d;
+            mainLight.shadow.camera.right = d;
+            mainLight.shadow.camera.top = d;
+            mainLight.shadow.camera.bottom = -d;
+            scene.add(mainLight);
+
+            const rimLight = new THREE.PointLight(0x00aaff, 3, 100);
+            rimLight.position.set(-20, 20, -20);
+            scene.add(rimLight);
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function disposeObject3D(object) {
+            if (!object) return;
+            object.traverse(child => {
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    const mats = Array.isArray(child.material) ? child.material : [child.material];
+                    mats.forEach(mat => mat && mat.dispose && mat.dispose());
+                }
+            });
+            scene.remove(object);
+        }
+
+        function getTrackFrame(progress) {
+            const t = ((progress % 1) + 1) % 1;
+            const center = trackCurve.getPointAt(t);
+            const tangent = trackCurve.getTangentAt(t).normalize();
+            const worldUp = new THREE.Vector3(0, 1, 0);
+            const side = new THREE.Vector3().crossVectors(tangent, worldUp);
+            if (side.lengthSq() < 0.0001) side.set(1, 0, 0);
+            side.normalize();
+            const up = new THREE.Vector3().crossVectors(side, tangent).normalize();
+            return { center, tangent, side, up };
+        }
+
+        function createTrack(theme = 'volcano', customPoints = null) {
+            if (trackMesh) disposeObject3D(trackMesh);
+
+            let points = [];
+            if (customPoints && customPoints.length > 2) {
+                points = customPoints;
+            } else if (theme === 'volcano') {
+                points = [
+                    new THREE.Vector3(0, 50, 0), new THREE.Vector3(20, 42, 30),
+                    new THREE.Vector3(50, 35, 10), new THREE.Vector3(30, 25, -40),
+                    new THREE.Vector3(-30, 18, -30), new THREE.Vector3(-50, 10, 20),
+                    new THREE.Vector3(0, 2, 50), new THREE.Vector3(40, -5, 0),
+                    new THREE.Vector3(0, -15, -40), new THREE.Vector3(-40, -25, 0)
+                ];
+            } else if (theme === 'ice') {
+                points = [
+                    new THREE.Vector3(0, 60, 0), new THREE.Vector3(40, 45, -20),
+                    new THREE.Vector3(20, 30, -60), new THREE.Vector3(-30, 20, -40),
+                    new THREE.Vector3(-60, 10, 10), new THREE.Vector3(-10, 0, 60),
+                    new THREE.Vector3(50, -10, 30), new THREE.Vector3(10, -20, -20)
+                ];
+            } else if (theme === 'space') {
+                points = [
+                    new THREE.Vector3(0, 40, 0), new THREE.Vector3(30, 50, 30),
+                    new THREE.Vector3(60, 20, 0), new THREE.Vector3(30, -10, -50),
+                    new THREE.Vector3(-30, 10, -30), new THREE.Vector3(-50, -20, 20)
+                ];
+            } else {
+                points = [
+                    new THREE.Vector3(0, 30, 0), new THREE.Vector3(15, 25, 30),
+                    new THREE.Vector3(45, 20, 30), new THREE.Vector3(45, 15, -20),
+                    new THREE.Vector3(-15, 10, -40), new THREE.Vector3(-45, 5, 0),
+                    new THREE.Vector3(-10, 0, 45)
+                ];
+            }
+
+            trackCurve = new THREE.CatmullRomCurve3(points, true, 'centripetal', 0.5);
+            trackMesh = new THREE.Group();
+            trackMesh.name = 'PlayableTrack';
+
+            const segments = 420;
+            const positions = [];
+            const uvs = [];
+            const indices = [];
+            const leftRailPoints = [];
+            const rightRailPoints = [];
+
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const center = trackCurve.getPointAt(t % 1);
+                const tangent = trackCurve.getTangentAt(t % 1).normalize();
+                const side = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0));
+                if (side.lengthSq() < 0.0001) side.set(1, 0, 0);
+                side.normalize();
+                const left = center.clone().addScaledVector(side, -TRACK_HALF_WIDTH);
+                const right = center.clone().addScaledVector(side, TRACK_HALF_WIDTH);
+                positions.push(left.x, left.y, left.z, right.x, right.y, right.z);
+                uvs.push(0, t * 24, 1, t * 24);
+                if (i < segments) {
+                    const a = i * 2, b = a + 1, c = a + 2, d = a + 3;
+                    indices.push(a, b, c, b, d, c);
+                }
+                if (i % 3 === 0 && i < segments) {
+                    leftRailPoints.push(left.clone().add(new THREE.Vector3(0, 1.15, 0)));
+                    rightRailPoints.push(right.clone().add(new THREE.Vector3(0, 1.15, 0)));
+                }
+            }
+
+            const roadGeo = new THREE.BufferGeometry();
+            roadGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            roadGeo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+            roadGeo.setIndex(indices);
+            roadGeo.computeVertexNormals();
+
+            const materialOptions = {
+                volcano: { color: 0x28110d, roughness: 0.42, metalness: 0.72, emissive: 0x210500, emissiveIntensity: 0.25 },
+                ice: { color: 0x9bdcff, roughness: 0.12, metalness: 0.12, emissive: 0x06304a, emissiveIntensity: 0.25 },
+                space: { color: 0x102854, roughness: 0.2, metalness: 0.9, emissive: 0x003b8f, emissiveIntensity: 0.5 },
+                portugal: { color: 0xb8892f, roughness: 0.58, metalness: 0.35, emissive: 0x2a1700, emissiveIntensity: 0.15 }
+            };
+            const roadMat = new THREE.MeshStandardMaterial({ ...materialOptions[theme], side: THREE.DoubleSide });
+            const road = new THREE.Mesh(roadGeo, roadMat);
+            road.castShadow = true;
+            road.receiveShadow = true;
+            trackMesh.add(road);
+
+            const railColor = theme === 'volcano' ? 0xff4a12 : theme === 'ice' ? 0x4ffaff : theme === 'space' ? 0x7c5cff : 0xf7c94a;
+            const railMat = new THREE.MeshStandardMaterial({ color: railColor, emissive: railColor, emissiveIntensity: 0.7, metalness: 0.65, roughness: 0.2 });
+            [leftRailPoints, rightRailPoints].forEach(pointsList => {
+                const curve = new THREE.CatmullRomCurve3(pointsList, true, 'centripetal', 0.5);
+                const geo = new THREE.TubeGeometry(curve, 260, 0.28, 8, true);
+                const rail = new THREE.Mesh(geo, railMat.clone());
+                rail.castShadow = true;
+                trackMesh.add(rail);
+            });
+
+            // Checkpoint gates and start line
+            [0, ...checkpointFractions].forEach((t, index) => {
+                const frame = getTrackFrame(t);
+                const gateGeo = new THREE.TorusGeometry(TRACK_HALF_WIDTH + 1.1, 0.22, 10, 36);
+                const gateMat = new THREE.MeshBasicMaterial({ color: index === 0 ? 0xffffff : railColor, transparent: true, opacity: 0.75 });
+                const gate = new THREE.Mesh(gateGeo, gateMat);
+                gate.position.copy(frame.center).addScaledVector(frame.up, 3.2);
+                gate.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), frame.tangent);
+                trackMesh.add(gate);
+            });
+
+            scene.add(trackMesh);
+            resetRace(false);
+        }
+
+        function createMarble() {
+            const sphereGeo = new THREE.SphereGeometry(1.6, 64, 64);
+
+            marbleMaterials = {
+                lava: new THREE.MeshStandardMaterial({
+                    color: 0xff3300,
+                    roughness: 0.2,
+                    metalness: 0.5,
+                    emissive: 0xff1100,
+                    emissiveIntensity: 0.8
+                }),
+                cristal: new THREE.MeshPhysicalMaterial({
+                    color: 0xffffff,
+                    transmission: 0.9,
+                    opacity: 1,
+                    transparent: true,
+                    roughness: 0.05,
+                    ior: 1.5,
+                    thickness: 2.0
+                }),
+                energia: new THREE.MeshStandardMaterial({
+                    color: 0x00ffff,
+                    roughness: 0.1,
+                    metalness: 0.8,
+                    emissive: 0x0088ff,
+                    emissiveIntensity: 1.0
+                }),
+                galaxie: new THREE.MeshStandardMaterial({
+                    color: 0x220044,
+                    roughness: 0.3,
+                    metalness: 0.7,
+                    emissive: 0x6600cc,
+                    emissiveIntensity: 0.4
+                }),
+                ouro: new THREE.MeshStandardMaterial({
+                    color: 0xffd700,
+                    roughness: 0.15,
+                    metalness: 0.95
+                }),
+                arcoiris: new THREE.MeshStandardMaterial({
+                    color: 0xff00ff,
+                    roughness: 0.2,
+                    metalness: 0.6
+                })
+            };
+
+            marble = new THREE.Mesh(sphereGeo, marbleMaterials[currentMaterial]);
+            marble.castShadow = true;
+            marble.receiveShadow = true;
+
+            const innerGeo = new THREE.SphereGeometry(0.9, 32, 32);
+            const innerMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const innerCore = new THREE.Mesh(innerGeo, innerMat);
+            marble.add(innerCore);
+
+            scene.add(marble);
+        }
+
+        function setMarbleMaterial(type) {
+            currentMaterial = type;
+            if (marble && marbleMaterials[type]) {
+                marble.material = marbleMaterials[type];
+            }
+        }
+
+        function createOpponents() {
+            opponents.forEach(o => scene.remove(o.mesh));
+            opponents = [];
+            const colors = [0x36e0ff, 0xff4fd8, 0x9cff57];
+            const offsets = [-2.6, 0.4, 2.7];
+            const speeds = [0.00123, 0.00131, 0.00118];
+            colors.forEach((color, i) => {
+                const mat = new THREE.MeshStandardMaterial({ color, metalness: 0.75, roughness: 0.16, emissive: color, emissiveIntensity: 0.35 });
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(1.35, 36, 36), mat);
+                mesh.castShadow = true;
+                scene.add(mesh);
+                opponents.push({ mesh, progress: 0.006 + i * 0.006, lap: 0, offset: offsets[i], baseSpeed: speeds[i], finished: false });
+            });
+        }
+
+        function showRaceMessage(text, duration = 1800) {
+            const el = document.getElementById('race-message');
+            if (!el) return;
+            el.textContent = text;
+            el.style.opacity = '1';
+            clearTimeout(showRaceMessage.timer);
+            showRaceMessage.timer = setTimeout(() => { el.style.opacity = '0.45'; }, duration);
+        }
+
+        function updateRaceHUD() {
+            const playerDistance = (raceLap - 1) + trackProgress;
+            const ahead = opponents.filter(o => (o.lap + o.progress) > playerDistance && !o.finished).length;
+            const position = raceFinished ? 1 + opponents.filter(o => o.finished).length : 1 + ahead;
+            document.getElementById('race-position').textContent = `${Math.min(position, 4)}/4`;
+            document.getElementById('race-lap').textContent = `${Math.min(raceLap, totalLaps)}/${totalLaps}`;
+            document.getElementById('race-checkpoint').textContent = `${nextCheckpoint}/3`;
+        }
+
+        function resetRace(announce = true) {
+            trackProgress = 0.012;
+            forwardVelocity = 0.00115;
+            lateralOffset = 0;
+            lateralVelocity = 0;
+            isFalling = false;
+            fallTimer = 0;
+            raceLap = 1;
+            nextCheckpoint = 0;
+            raceFinished = false;
+            lastSafeProgress = trackProgress;
+            opponents.forEach((o, i) => {
+                o.progress = 0.006 + i * 0.006;
+                o.lap = 0;
+                o.finished = false;
+            });
+            if (announce) showRaceMessage('CORRIDA REINICIADA — BOA SORTE!', 2200);
+            updateRaceHUD();
+        }
+
+        function respawnMarble() {
+            isFalling = false;
+            trackProgress = lastSafeProgress;
+            lateralOffset = 0;
+            lateralVelocity = 0;
+            forwardVelocity = 0.00105;
+            showRaceMessage('FORA DA PISTA — REPOSIÇÃO NO ÚLTIMO PONTO SEGURO', 2200);
+            sound.playImpact(0.65);
+        }
+
+        function triggerBoost() {
+            if (raceFinished || isFalling) return;
+            sound.init();
+            sound.playBoost();
+            isBoosted = true;
+            boostUntil = performance.now() + 1800;
+            showRaceMessage('TURBO ATIVADO!', 900);
+        }
+
+        function updateCheckpoints(previousProgress, currentProgress) {
+            if (raceFinished) return;
+            if (nextCheckpoint < checkpointFractions.length) {
+                const cp = checkpointFractions[nextCheckpoint];
+                if (previousProgress < cp && currentProgress >= cp) {
+                    nextCheckpoint++;
+                    showRaceMessage(`CHECKPOINT ${nextCheckpoint}/3`, 900);
+                    sound.playImpact(0.3);
+                }
+            }
+            if (currentProgress < previousProgress) {
+                if (nextCheckpoint === checkpointFractions.length) {
+                    if (raceLap >= totalLaps) {
+                        raceFinished = true;
+                        forwardVelocity = 0;
+                        showRaceMessage('🏆 CORRIDA CONCLUÍDA! MARBLE RUSH™', 6000);
+                        speakAnnouncerLine('Vitória espetacular! O berlinde cruza a meta e conquista o circuito do MARBLE RUSH!');
+                    } else {
+                        raceLap++;
+                        nextCheckpoint = 0;
+                        showRaceMessage(`VOLTA ${raceLap}/${totalLaps}`, 1800);
+                    }
+                } else {
+                    showRaceMessage('VOLTA INVÁLIDA — FALTOU UM CHECKPOINT', 1700);
+                    nextCheckpoint = 0;
+                }
+            }
+        }
+
+        function updateOpponents(delta, time) {
+            opponents.forEach((o, i) => {
+                if (!trackCurve || o.finished) return;
+                const previous = o.progress;
+                const frame = getTrackFrame(o.progress);
+                const slopeFactor = THREE.MathUtils.clamp(-frame.tangent.y * 0.00016, -0.00005, 0.00008);
+                o.progress += (o.baseSpeed + slopeFactor + Math.sin(time * 0.9 + i) * 0.000025) * delta * 60;
+                if (o.progress >= 1) {
+                    o.progress -= 1;
+                    o.lap++;
+                    if (o.lap >= totalLaps) o.finished = true;
+                }
+                const newFrame = getTrackFrame(o.progress);
+                const weave = Math.sin(time * (0.65 + i * 0.08) + i) * 0.55;
+                o.mesh.position.copy(newFrame.center)
+                    .addScaledVector(newFrame.side, o.offset + weave)
+                    .addScaledVector(newFrame.up, 1.45);
+                o.mesh.rotation.x += 0.06 * delta * 60;
+                o.mesh.rotation.z += 0.035 * delta * 60;
+            });
+        }
+
+        function setupPlayableControls() {
+            const setKey = (key, value) => {
+                if (key === 'ArrowLeft' || key.toLowerCase() === 'a') keys.left = value;
+                if (key === 'ArrowRight' || key.toLowerCase() === 'd') keys.right = value;
+            };
+            window.addEventListener('keydown', e => {
+                setKey(e.key, true);
+                if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) triggerBoost(); }
+                if (e.key.toLowerCase() === 'r') resetRace();
+            });
+            window.addEventListener('keyup', e => setKey(e.key, false));
+
+            const bindHold = (id, prop) => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                ['pointerdown', 'touchstart'].forEach(evt => btn.addEventListener(evt, e => { e.preventDefault(); keys[prop] = true; }));
+                ['pointerup', 'pointercancel', 'pointerleave', 'touchend'].forEach(evt => btn.addEventListener(evt, e => { e.preventDefault(); keys[prop] = false; }));
+            };
+            bindHold('touch-left', 'left');
+            bindHold('touch-right', 'right');
+            document.getElementById('touch-boost')?.addEventListener('click', triggerBoost);
+        }
+
+        function createEnvironment(theme) {
+            currentEnv = theme;
+
+            environmentObjects.forEach(obj => scene.remove(obj));
+            environmentObjects = [];
+
+            if (particlesSystem) scene.remove(particlesSystem);
+
+            const envLabel = document.getElementById('environment-label');
+            const weatherIcon = document.getElementById('weather-icon');
+
+            if (theme === 'volcano') {
+                envLabel.textContent = "Vulcão Ativo";
+                weatherIcon.className = "fa-solid fa-fire text-amber-500";
+                scene.fog.color.setHex(0x1a0803);
+                renderer.setClearColor(0x0a0302);
+
+                const groundGeo = new THREE.PlaneGeometry(500, 500, 32, 32);
+                const groundMat = new THREE.MeshStandardMaterial({
+                    color: 0x330500,
+                    emissive: 0xff2200,
+                    emissiveIntensity: 0.4,
+                    roughness: 0.9
+                });
+                const ground = new THREE.Mesh(groundGeo, groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = -40;
+                scene.add(ground);
+                environmentObjects.push(ground);
+
+                createParticles(1200, 0xff5500, 0.8, 60);
+
+            } else if (theme === 'ice') {
+                envLabel.textContent = "Montanha Gelada";
+                weatherIcon.className = "fa-solid fa-snowflake text-cyan-300";
+                scene.fog.color.setHex(0x081522);
+                renderer.setClearColor(0x040b12);
+
+                const groundGeo = new THREE.PlaneGeometry(500, 500);
+                const groundMat = new THREE.MeshStandardMaterial({
+                    color: 0x88ccff,
+                    roughness: 0.2
+                });
+                const ground = new THREE.Mesh(groundGeo, groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.y = -40;
+                scene.add(ground);
+                environmentObjects.push(ground);
+
+                createParticles(2000, 0xffffff, 0.5, 80);
+
+            } else if (theme === 'space') {
+                envLabel.textContent = "Estação Espacial";
+                weatherIcon.className = "fa-solid fa-user-astronaut text-purple-400";
+                scene.fog.color.setHex(0x020208);
+                renderer.setClearColor(0x010104);
+
+                createParticles(3000, 0xaabbff, 0.4, 150);
+
+            } else if (theme === 'portugal') {
+                envLabel.textContent = "Tour de Portugal (Lisboa)";
+                weatherIcon.className = "fa-solid fa-sun text-yellow-400";
+                scene.fog.color.setHex(0x101a28);
+                renderer.setClearColor(0x0a101d);
+
+                for (let i = 0; i < 5; i++) {
+                    const archGeo = new THREE.TorusGeometry(12, 1.5, 16, 32, Math.PI);
+                    const archMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3 });
+                    const arch = new THREE.Mesh(archGeo, archMat);
+                    arch.position.set(Math.sin(i * 1.5) * 40, i * 8 - 10, Math.cos(i * 1.5) * 40);
+                    arch.rotation.y = i;
+                    scene.add(arch);
+                    environmentObjects.push(arch);
+                }
+
+                createParticles(800, 0xffd700, 0.6, 70);
+            }
+
+            createTrack(theme);
+        }
+
+        function createParticles(count, colorHex, size, radius) {
+            const pGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+
+            for (let i = 0; i < count * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * radius * 2;
+                positions[i + 1] = (Math.random() - 0.5) * radius * 2;
+                positions[i + 2] = (Math.random() - 0.5) * radius * 2;
+            }
+
+            pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const pMat = new THREE.PointsMaterial({
+                color: colorHex,
+                size: size,
+                transparent: true,
+                opacity: 0.7,
+                blending: THREE.AdditiveBlending
+            });
+
+            particlesSystem = new THREE.Points(pGeo, pMat);
+            scene.add(particlesSystem);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = Math.min(clock.getDelta(), 0.033);
+            const time = clock.getElapsedTime();
+            isBoosted = performance.now() < boostUntil;
+
+            if (trackCurve && marble) {
+                if (!isFalling && !raceFinished) {
+                    const previousProgress = trackProgress;
+                    const frame = getTrackFrame(trackProgress);
+                    const steer = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+
+                    // Inclinação da pista afeta a aceleração longitudinal.
+                    const gravityAcceleration = THREE.MathUtils.clamp(-frame.tangent.y * 0.000035, -0.000018, 0.00004);
+                    const envGrip = currentEnv === 'ice' ? 0.72 : currentEnv === 'space' ? 0.88 : 1.0;
+                    forwardVelocity += (gravityAcceleration + 0.0000018) * delta * 60;
+                    forwardVelocity *= Math.pow(currentEnv === 'ice' ? 0.9997 : 0.9992, delta * 60);
+                    forwardVelocity = THREE.MathUtils.clamp(forwardVelocity, 0.00072, 0.00265);
+
+                    const boostVelocity = isBoosted ? 0.00135 : 0;
+                    trackProgress += (forwardVelocity + boostVelocity) * delta * 60;
+                    if (trackProgress >= 1) trackProgress -= 1;
+                    updateCheckpoints(previousProgress, trackProgress);
+
+                    lateralVelocity += steer * 4.5 * envGrip * delta;
+                    lateralVelocity *= Math.pow(currentEnv === 'ice' ? 0.22 : 0.035, delta);
+                    lateralOffset += lateralVelocity * delta;
+
+                    // Proteções laterais com ressalto; impactos fortes podem lançar o berlinde.
+                    if (Math.abs(lateralOffset) > TRACK_HALF_WIDTH - 0.8) {
+                        if (!(isBoosted && Math.abs(lateralVelocity) > 1.15)) {
+                            lateralOffset = Math.sign(lateralOffset) * (TRACK_HALF_WIDTH - 0.8);
+                            lateralVelocity *= -0.42;
+                            sound.playImpact(0.22);
+                        } else {
+                            isFalling = true;
+                        }
+                    }
+                    if (Math.abs(lateralOffset) > TRACK_HALF_WIDTH + 1.0) isFalling = true;
+
+                    const currentFrame = getTrackFrame(trackProgress);
+                    marble.position.copy(currentFrame.center)
+                        .addScaledVector(currentFrame.side, lateralOffset)
+                        .addScaledVector(currentFrame.up, 1.72);
+
+                    if (!isFalling && Math.abs(lateralOffset) < TRACK_HALF_WIDTH - 1.2) {
+                        lastSafeProgress = trackProgress;
+                    }
+
+                    if (isFalling) {
+                        fallTimer = 0;
+                        fallVelocity.copy(currentFrame.tangent).multiplyScalar((forwardVelocity + boostVelocity) * 9000);
+                        fallVelocity.addScaledVector(currentFrame.side, lateralVelocity * 0.75);
+                        fallVelocity.y += 2.2;
+                        showRaceMessage('CUIDADO! BERLINDE FORA DA PISTA', 1200);
+                    }
+                } else if (isFalling) {
+                    fallTimer += delta;
+                    fallVelocity.y -= 18 * delta;
+                    marble.position.addScaledVector(fallVelocity, delta);
+                    marble.rotation.x += fallVelocity.length() * 0.012;
+                    if (fallTimer > 1.65 || marble.position.y < -75) respawnMarble();
+                }
+
+                speed = raceFinished ? 0 : Math.max(0, Math.floor((forwardVelocity + (isBoosted ? 0.00135 : 0)) * 52000));
+                updateSpeedometer(speed);
+                sound.updateRollSound(isFalling ? 0 : speed);
+
+                marble.rotation.x += speed * 0.0022 * delta * 60;
+                marble.rotation.z += (speed * 0.0012 + lateralVelocity * 0.02) * delta * 60;
+
+                if (currentMaterial === 'arcoiris') marble.material.color.setHSL((time * 0.5) % 1, 0.9, 0.5);
+
+                if (camMode === 'follow') {
+                    const cameraFrame = getTrackFrame(trackProgress);
+                    const desired = marble.position.clone()
+                        .addScaledVector(cameraFrame.tangent, -16)
+                        .addScaledVector(cameraFrame.up, 8.5)
+                        .addScaledVector(cameraFrame.side, lateralOffset * 0.18);
+                    camera.position.lerp(desired, 1 - Math.pow(0.002, delta));
+                    const lookTarget = marble.position.clone().addScaledVector(cameraFrame.tangent, 10).addScaledVector(cameraFrame.up, 1.2);
+                    camera.lookAt(lookTarget);
+                } else {
+                    controls.target.lerp(marble.position, 0.08);
+                    controls.update();
+                }
+            }
+
+            updateOpponents(delta, time);
+            updateRaceHUD();
+
+            if (particlesSystem) particlesSystem.rotation.y = time * 0.05;
+
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsUpdate >= 1000) {
+                document.getElementById('fps-counter').textContent = frameCount;
+                frameCount = 0;
+                lastFpsUpdate = now;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function updateSpeedometer(value) {
+            const speedVal = document.getElementById('speed-value');
+            const speedMeter = document.getElementById('speed-meter');
+            speedVal.textContent = value;
+            const offset = 283 - (Math.min(value, 150) / 150) * 200;
+            speedMeter.style.strokeDashoffset = offset;
+        }
+
+        async function generateAITrack(promptText) {
+            sound.init();
+            sound.playBoost();
+
+            const statusContainer = document.getElementById('ai-status-container');
+            const statusText = document.getElementById('ai-status-text');
+            const conceptWrapper = document.getElementById('concept-art-wrapper');
+            const conceptImg = document.getElementById('concept-art-img');
+            const titleBadge = document.getElementById('ai-track-title-badge');
+
+            statusContainer.classList.remove('hidden');
+            conceptWrapper.classList.add('hidden');
+            statusText.textContent = "Gemini 3.1 Flash a desenhar física e spline 3D...";
+
+            try {
+                const trackData = await generateTrackDataWithGemini(promptText);
+
+                titleBadge.textContent = trackData.trackTitle || "Pista Criada por IA";
+                statusText.textContent = "Imagen 4 a gerar arte concetual da pista...";
+
+                let customPoints = [];
+                if (trackData.points && trackData.points.length > 3) {
+                    customPoints = trackData.points.map(p => new THREE.Vector3(p.x, p.y, p.z));
+                }
+
+                createEnvironment(trackData.theme || 'volcano');
+                if (customPoints.length > 0) {
+                    createTrack(trackData.theme || 'volcano', customPoints);
+                }
+
+                generateConceptArtWithImagen(trackData.conceptArtPrompt || promptText).then(imgUrl => {
+                    if (imgUrl) {
+                        conceptImg.src = imgUrl;
+                        conceptWrapper.classList.remove('hidden');
+                    }
+                }).catch(() => {});
+
+                if (trackData.announcerLine) {
+                    speakAnnouncerLine(trackData.announcerLine);
+                }
+
+                statusText.textContent = `✅ Pista "${trackData.trackTitle}" gerada com sucesso!`;
+
+            } catch (err) {
+                console.log("Erro na API Gemini, a carregar pista de segurança:", err);
+                statusText.textContent = "⚠️ Utilizando gerador local procedural...";
+                let hash = 0;
+                for (let i = 0; i < promptText.length; i++) hash = promptText.charCodeAt(i) + ((hash << 5) - hash);
+                let points = [];
+                for (let i = 0; i < 10; i++) {
+                    const angle = (i / 10) * Math.PI * 2;
+                    points.push(new THREE.Vector3(Math.cos(angle) * (30 + Math.sin(hash + i) * 15), Math.cos(hash * i) * 20, Math.sin(angle) * 30));
+                }
+                createEnvironment('volcano');
+                createTrack('volcano', points);
+            }
+        }
+
+        function setupUIEventListeners() {
+            document.getElementById('btn-audio').addEventListener('click', () => {
+                if (!sound.ctx) sound.init();
+                else sound.enabled = !sound.enabled;
+                if (!sound.enabled && sound.rollGain) sound.rollGain.gain.setTargetAtTime(0, sound.ctx.currentTime, 0.03);
+                const icon = document.getElementById('audio-icon');
+                icon.className = sound.enabled ? "fa-solid fa-volume-high text-amber-400" : "fa-solid fa-volume-xmark text-slate-400";
+            });
+
+            document.getElementById('btn-cam').addEventListener('click', () => {
+                camMode = camMode === 'follow' ? 'free' : 'follow';
+                document.getElementById('cam-mode-text').textContent = camMode === 'follow' ? "Câmara: Seguir" : "Câmara: Livre 3D";
+            });
+
+            document.getElementById('btn-boost').addEventListener('click', triggerBoost);
+
+            document.getElementById('btn-restart').addEventListener('click', () => {
+                sound.init();
+                sound.playImpact(0.8);
+                resetRace();
+            });
+
+            document.querySelectorAll('.marble-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sound.init();
+                    sound.playImpact(0.4);
+                    document.querySelectorAll('.marble-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    setMarbleMaterial(btn.dataset.material);
+                });
+            });
+
+            document.querySelectorAll('.env-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sound.init();
+                    sound.playBoost();
+                    document.querySelectorAll('.env-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    createEnvironment(btn.dataset.env);
+                });
+            });
+
+            const aiModal = document.getElementById('ai-modal');
+            document.getElementById('btn-open-ai').addEventListener('click', () => {
+                aiModal.classList.remove('hidden');
+            });
+            document.getElementById('btn-close-ai').addEventListener('click', () => {
+                aiModal.classList.add('hidden');
+            });
+
+            document.getElementById('btn-generate-track').addEventListener('click', () => {
+                const input = document.getElementById('ai-prompt-input');
+                if (input.value.trim() !== '') {
+                    generateAITrack(input.value.trim());
+                    aiModal.classList.add('hidden');
+                }
+            });
+
+            document.querySelectorAll('.prompt-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const text = chip.textContent.trim();
+                    document.getElementById('ai-prompt-input').value = text;
+                    generateAITrack(text);
+                    aiModal.classList.add('hidden');
+                });
+            });
+
+            document.getElementById('btn-announcer').addEventListener('click', () => {
+                sound.init();
+                const commentaryList = [
+                    `E lá vai o Berlinde de ${currentMaterial} a ultrapassar a barreira dos ${speed} quilómetros por hora!`,
+                    `Espetacular manobra na curva fechada da pista ${currentEnv}! Impressionante!`,
+                    `Física perfeita em tempo real! MARBLE RUSH eleva o patamar dos jogos de corrida!`,
+                    `Que arranque alucinante! O berlinde ganha uma aceleração incrível na descida!`
+                ];
+                const line = commentaryList[Math.floor(Math.random() * commentaryList.length)];
+                speakAnnouncerLine(line);
+            });
+
+            const engModal = document.getElementById('engineer-modal');
+            document.getElementById('btn-open-engineer').addEventListener('click', () => {
+                engModal.classList.toggle('hidden');
+            });
+            document.getElementById('btn-close-engineer').addEventListener('click', () => {
+                engModal.classList.add('hidden');
+            });
+
+            const sendEngBtn = document.getElementById('btn-send-engineer');
+            const engInput = document.getElementById('engineer-input');
+            const chatLog = document.getElementById('engineer-chat-log');
+
+            async function handleEngMessage(qText) {
+                if (!qText.trim()) return;
+                
+                const userDiv = document.createElement('div');
+                userDiv.className = "bg-white/10 p-2.5 rounded-xl text-right text-amber-300 font-semibold";
+                userDiv.textContent = qText;
+                chatLog.appendChild(userDiv);
+                engInput.value = '';
+                chatLog.scrollTop = chatLog.scrollHeight;
+
+                const loadDiv = document.createElement('div');
+                loadDiv.className = "bg-blue-950/40 border border-blue-500/20 p-2.5 rounded-xl text-slate-400 italic";
+                loadDiv.textContent = "Engenheiro IA a analisar dados...";
+                chatLog.appendChild(loadDiv);
+                chatLog.scrollTop = chatLog.scrollHeight;
+
+                const ans = await askAIEngineer(qText);
+                chatLog.removeChild(loadDiv);
+
+                const aiDiv = document.createElement('div');
+                aiDiv.className = "bg-blue-950/40 border border-blue-500/20 p-2.5 rounded-xl";
+                aiDiv.textContent = ans;
+                chatLog.appendChild(aiDiv);
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+
+            sendEngBtn.addEventListener('click', () => handleEngMessage(engInput.value));
+            engInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleEngMessage(engInput.value);
+            });
+
+            document.querySelectorAll('.eng-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    handleEngMessage(chip.textContent.trim());
+                });
+            });
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        window.onload = function() {
+            initThree();
+            createMarble();
+            createOpponents();
+            createEnvironment('volcano');
+            setupUIEventListeners();
+            setupPlayableControls();
+            showRaceMessage('← → ou A/D para dirigir • ESPAÇO para turbo', 5000);
+            animate();
+        };
+    </script>
+</body>
+</html>
