@@ -187,9 +187,9 @@
         <section class="menu-card text-white">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <p class="text-[10px] font-black tracking-[.34em] text-amber-400">PLAYABLE BUILD V2</p>
+                    <p class="text-[10px] font-black tracking-[.34em] text-amber-400">PLAYABLE BUILD V3 · ARCADE UPDATE</p>
                     <h2 class="text-4xl md:text-6xl font-black leading-none mt-2 bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-orange-400 to-red-500">MARBLE<br>RUSH™</h2>
-                    <p class="mt-3 max-w-lg text-sm text-slate-300">Escolhe o circuito, prepara o teu berlinde e conquista três voltas contra adversários controlados pelo jogo.</p>
+                    <p class="mt-3 max-w-lg text-sm text-slate-300">Escolhe o circuito, recolhe energia, evita obstáculos e conquista três voltas contra adversários controlados pelo jogo.</p>
                 </div>
                 <div class="hidden sm:flex w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-orange-600 to-purple-700 items-center justify-center text-3xl font-black shadow-2xl">MR</div>
             </div>
@@ -218,8 +218,8 @@
 
             <div class="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div class="text-xs text-slate-400">
-                    <p><span class="text-white font-bold">Controlos:</span> A/D ou ←/→ · Espaço para turbo · R para reiniciar</p>
-                    <p class="mt-1">Melhor tempo: <strong id="menu-best-time" class="text-amber-300">--:--.---</strong></p>
+                    <p><span class="text-white font-bold">Controlos:</span> A/D ou ←/→ · Espaço para turbo · P/Esc pausa · R reinicia</p>
+                    <p class="mt-1">Melhor tempo: <strong id="menu-best-time" class="text-amber-300">--:--.---</strong> · Melhor pontuação: <strong id="menu-best-score" class="text-cyan-300">0</strong></p>
                 </div>
                 <button id="btn-start-race" class="primary-play rounded-2xl px-8 py-4 text-sm font-black tracking-[.18em] text-white shrink-0"><i class="fa-solid fa-play mr-2"></i> JOGAR</button>
             </div>
@@ -237,14 +237,30 @@
             <p id="finish-kicker" class="text-[10px] font-black tracking-[.34em] text-amber-400">CORRIDA CONCLUÍDA</p>
             <h2 id="finish-title" class="text-4xl md:text-6xl font-black mt-3">🏆 VITÓRIA!</h2>
             <p id="finish-subtitle" class="mt-3 text-sm text-slate-300">Dominaste o circuito do MARBLE RUSH™.</p>
-            <div class="grid grid-cols-3 gap-2 mt-7">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-7">
                 <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">POSIÇÃO</p><strong id="finish-position" class="text-2xl">1/4</strong></div>
                 <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">TEMPO</p><strong id="finish-time" class="text-lg text-amber-300">00:00.000</strong></div>
                 <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">RECORDE</p><strong id="finish-best" class="text-lg text-cyan-300">--:--.---</strong></div>
+                <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">PONTUAÇÃO</p><strong id="finish-score" class="text-lg text-violet-300">0</strong></div>
             </div>
             <div class="mt-7 flex flex-col sm:flex-row justify-center gap-3">
                 <button id="btn-race-again" class="primary-play rounded-2xl px-7 py-4 text-sm font-black"><i class="fa-solid fa-rotate-right mr-2"></i> JOGAR NOVAMENTE</button>
                 <button id="btn-main-menu" class="glass-button rounded-2xl px-7 py-4 text-sm font-bold"><i class="fa-solid fa-house mr-2"></i> MENU PRINCIPAL</button>
+            </div>
+        </section>
+    </div>
+
+
+    <!-- Pause Screen -->
+    <div id="pause-screen" class="screen-overlay hidden">
+        <section class="menu-card max-w-md text-center">
+            <p class="text-[10px] font-black tracking-[.34em] text-cyan-300">CORRIDA EM PAUSA</p>
+            <h2 class="text-4xl md:text-5xl font-black mt-3">⏸ PAUSA</h2>
+            <p class="mt-3 text-sm text-slate-300">A pista ficou congelada. Retoma quando estiveres preparado.</p>
+            <div class="mt-7 flex flex-col gap-3">
+                <button id="btn-resume-race" class="primary-play rounded-2xl px-7 py-4 text-sm font-black"><i class="fa-solid fa-play mr-2"></i> CONTINUAR</button>
+                <button id="btn-pause-restart" class="glass-button rounded-2xl px-7 py-4 text-sm font-bold"><i class="fa-solid fa-rotate-right mr-2"></i> REINICIAR CORRIDA</button>
+                <button id="btn-pause-menu" class="glass-button rounded-2xl px-7 py-4 text-sm font-bold"><i class="fa-solid fa-house mr-2"></i> MENU PRINCIPAL</button>
             </div>
         </section>
     </div>
@@ -261,7 +277,7 @@
                     <h1 class="text-2xl font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-400 to-red-500">
                         MARBLE RUSH<span class="text-xs align-super text-amber-400 font-normal">™ AAA</span>
                     </h1>
-                    <p class="text-xs text-slate-400 tracking-wider">PLAYABLE V2 · RACE MODE · 3 LAPS</p>
+                    <p class="text-xs text-slate-400 tracking-wider">PLAYABLE V3 · ARCADE RACE · 3 LAPS</p>
                 </div>
             </div>
 
@@ -421,8 +437,22 @@
                 <span class="w-px h-5 bg-white/15"></span>
                 <span class="text-slate-400">TEMPO <strong id="race-time" class="hud-time text-emerald-300 text-base ml-1">00:00.000</strong></span>
             </div>
+            <div class="race-chip rounded-2xl px-3 py-2 flex items-center gap-3 text-xs pointer-events-auto">
+                <span class="text-slate-400">PONTOS <strong id="race-score" class="text-violet-300 text-base ml-1">0</strong></span>
+                <span class="w-px h-5 bg-white/15"></span>
+                <span class="text-slate-400">ENERGIA <strong id="race-orbs" class="text-cyan-300 text-base ml-1">0/24</strong></span>
+                <span class="w-px h-5 bg-white/15"></span>
+                <div class="flex items-center gap-2 min-w-[140px]">
+                    <span class="text-slate-400">TURBO</span>
+                    <div class="h-2 flex-1 rounded-full bg-white/10 overflow-hidden border border-white/10">
+                        <div id="turbo-energy-bar" class="h-full bg-gradient-to-r from-cyan-400 via-amber-400 to-orange-500 transition-all duration-150" style="width:100%"></div>
+                    </div>
+                    <strong id="turbo-energy-text" class="text-amber-300">100%</strong>
+                </div>
+                <button id="btn-pause" class="glass-button w-8 h-8 rounded-lg flex items-center justify-center" title="Pausa"><i class="fa-solid fa-pause"></i></button>
+            </div>
             <div id="race-message" class="text-center text-sm font-black tracking-wider text-white transition-opacity duration-300">
-                ← → ou A/D para dirigir • ESPAÇO para turbo
+                ← → ou A/D para dirigir • ESPAÇO para turbo • recolhe as esferas
             </div>
         </div>
 
@@ -917,13 +947,25 @@
         const checkpointFractions = [0.25, 0.50, 0.75];
         let nextCheckpoint = 0;
         let raceFinished = false;
-        let gameState = 'loading'; // loading | menu | countdown | racing | finished
+        let gameState = 'loading'; // loading | menu | countdown | racing | paused | finished
         let raceStartTime = 0;
         let elapsedRaceTime = 0;
         let finalRacePosition = 4;
         let countdownSequenceId = 0;
+        let pausedAt = 0;
         let bestRaceTime = Number(localStorage.getItem('marbleRushBestTime') || 0);
+        let bestScore = Number(localStorage.getItem('marbleRushBestScore') || 0);
+        let score = 0;
+        let collectedOrbs = 0;
+        let turboEnergy = 100;
+        let arcadeGroup = null;
+        let boostPads = [];
+        let energyOrbs = [];
+        let hazardClusters = [];
+        let collisionCooldownUntil = 0;
         const TRACK_HALF_WIDTH = 5.25;
+        const ORBS_PER_LAP = 8;
+        const TOTAL_RACE_ORBS = ORBS_PER_LAP * totalLaps;
         const keys = { left: false, right: false };
         let opponents = [];
 
@@ -1110,7 +1152,198 @@
             });
 
             scene.add(trackMesh);
+            createArcadeFeatures(theme);
             resetRace(false);
+        }
+
+
+        function progressDistance(a, b) {
+            const raw = Math.abs(a - b);
+            return Math.min(raw, 1 - raw);
+        }
+
+        function makeTrackAlignedGroup(progress, height = 0) {
+            const frame = getTrackFrame(progress);
+            const group = new THREE.Group();
+            group.position.copy(frame.center).addScaledVector(frame.up, height);
+            const basis = new THREE.Matrix4().makeBasis(frame.side, frame.up, frame.tangent);
+            group.quaternion.setFromRotationMatrix(basis);
+            return group;
+        }
+
+        function createArcadeFeatures(theme) {
+            if (arcadeGroup) disposeObject3D(arcadeGroup);
+            boostPads = [];
+            energyOrbs = [];
+            hazardClusters = [];
+            arcadeGroup = new THREE.Group();
+            arcadeGroup.name = 'ArcadeFeatures';
+
+            const themeColors = {
+                volcano: { boost: 0xff7200, orb: 0xffd45a, hazard: 0xff3215 },
+                ice: { boost: 0x44f4ff, orb: 0xffffff, hazard: 0x45a8ff },
+                space: { boost: 0xa855f7, orb: 0x55ddff, hazard: 0xff4fd8 },
+                portugal: { boost: 0xffc928, orb: 0x56ff9c, hazard: 0xe53935 }
+            };
+            const colors = themeColors[theme] || themeColors.volcano;
+
+            const padSpecs = [
+                [0.11, -2.0], [0.36, 2.1], [0.61, -1.5], [0.84, 1.8]
+            ];
+            padSpecs.forEach(([progress, offset], index) => {
+                const group = makeTrackAlignedGroup(progress, 0.16);
+                group.position.addScaledVector(getTrackFrame(progress).side, offset);
+                const mat = new THREE.MeshStandardMaterial({
+                    color: colors.boost, emissive: colors.boost, emissiveIntensity: 1.25,
+                    metalness: 0.75, roughness: 0.2, transparent: true, opacity: 0.92
+                });
+                const pad = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.22, 4.4), mat);
+                pad.receiveShadow = true;
+                group.add(pad);
+                for (let stripe = -1; stripe <= 1; stripe++) {
+                    const stripeMesh = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.34, 0.05, 3.4),
+                        new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 })
+                    );
+                    stripeMesh.position.set(stripe * 0.75, 0.14, 0);
+                    group.add(stripeMesh);
+                }
+                arcadeGroup.add(group);
+                boostPads.push({ group, progress, offset, lastTriggerLap: 0, index });
+            });
+
+            const orbSpecs = [
+                [0.17, -2.8], [0.26, 1.6], [0.43, 3.0], [0.52, -1.1],
+                [0.67, -3.0], [0.75, 1.1], [0.89, 2.8], [0.96, -1.8]
+            ];
+            orbSpecs.forEach(([progress, offset], index) => {
+                const group = makeTrackAlignedGroup(progress, 2.15);
+                group.position.addScaledVector(getTrackFrame(progress).side, offset);
+                const orbMat = new THREE.MeshStandardMaterial({
+                    color: colors.orb, emissive: colors.orb, emissiveIntensity: 1.35,
+                    metalness: 0.4, roughness: 0.14
+                });
+                const orb = new THREE.Mesh(new THREE.IcosahedronGeometry(0.62, 2), orbMat);
+                const ring = new THREE.Mesh(
+                    new THREE.TorusGeometry(0.9, 0.08, 8, 28),
+                    new THREE.MeshBasicMaterial({ color: colors.orb, transparent: true, opacity: 0.8 })
+                );
+                ring.rotation.x = Math.PI / 2;
+                group.add(orb, ring);
+                arcadeGroup.add(group);
+                energyOrbs.push({ group, orb, ring, progress, offset, collectedLap: 0, index });
+            });
+
+            const hazardSpecs = [
+                { progress: 0.225, blocked: [-2.8, 0] },
+                { progress: 0.475, blocked: [0, 2.8] },
+                { progress: 0.715, blocked: [-2.8, 2.8] },
+                { progress: 0.925, blocked: [-2.8, 0] }
+            ];
+            hazardSpecs.forEach((spec, index) => {
+                const group = makeTrackAlignedGroup(spec.progress, 1.35);
+                const blocks = [];
+                spec.blocked.forEach((offset, blockIndex) => {
+                    const mat = new THREE.MeshStandardMaterial({
+                        color: colors.hazard, emissive: colors.hazard, emissiveIntensity: 0.5,
+                        metalness: 0.42, roughness: 0.5
+                    });
+                    const geometry = theme === 'ice'
+                        ? new THREE.OctahedronGeometry(1.22, 0)
+                        : theme === 'space'
+                            ? new THREE.DodecahedronGeometry(1.12, 0)
+                            : new THREE.BoxGeometry(2.05, 2.45, 1.8);
+                    const block = new THREE.Mesh(geometry, mat);
+                    block.position.x = offset;
+                    block.castShadow = true;
+                    block.userData.spin = (blockIndex ? -1 : 1) * (0.35 + index * 0.06);
+                    group.add(block);
+                    blocks.push(block);
+                });
+                arcadeGroup.add(group);
+                hazardClusters.push({ group, progress: spec.progress, blocked: spec.blocked, blocks, lastHitKey: '' });
+            });
+
+            scene.add(arcadeGroup);
+        }
+
+        function resetArcadeLap() {
+            energyOrbs.forEach(orb => {
+                orb.group.visible = true;
+                orb.collectedLap = 0;
+            });
+        }
+
+        function updateArcadeFeatures(delta, time) {
+            if (!arcadeGroup) return;
+
+            boostPads.forEach((pad, index) => {
+                const pulse = 0.75 + Math.sin(time * 5 + index) * 0.35;
+                pad.group.children.forEach((child, childIndex) => {
+                    if (child.material && 'emissiveIntensity' in child.material && childIndex === 0) child.material.emissiveIntensity = pulse + 0.55;
+                });
+            });
+
+            energyOrbs.forEach((orb, index) => {
+                orb.group.rotation.z += delta * (1.2 + index * 0.04);
+                orb.orb.rotation.x += delta * 1.8;
+                orb.group.position.y += Math.sin(time * 2.4 + index) * 0.0025;
+            });
+
+            hazardClusters.forEach((cluster, index) => {
+                cluster.blocks.forEach(block => {
+                    block.rotation.y += delta * block.userData.spin;
+                    block.rotation.x += delta * block.userData.spin * 0.35;
+                });
+                const glow = 0.35 + (Math.sin(time * 4 + index) + 1) * 0.18;
+                cluster.blocks.forEach(block => { if (block.material) block.material.emissiveIntensity = glow; });
+            });
+
+            if (gameState !== 'racing' || isFalling || raceFinished) return;
+
+            boostPads.forEach(pad => {
+                if (pad.lastTriggerLap === raceLap) return;
+                if (progressDistance(trackProgress, pad.progress) < 0.012 && Math.abs(lateralOffset - pad.offset) < 1.75) {
+                    pad.lastTriggerLap = raceLap;
+                    boostUntil = Math.max(boostUntil, performance.now() + 1450);
+                    turboEnergy = Math.min(100, turboEnergy + 22);
+                    score += 60;
+                    sound.playBoost();
+                    showRaceMessage('⚡ PLATAFORMA TURBO — +60 PONTOS', 1100);
+                }
+            });
+
+            energyOrbs.forEach(orb => {
+                if (orb.collectedLap === raceLap || !orb.group.visible) return;
+                if (progressDistance(trackProgress, orb.progress) < 0.013 && Math.abs(lateralOffset - orb.offset) < 1.28) {
+                    orb.collectedLap = raceLap;
+                    orb.group.visible = false;
+                    collectedOrbs++;
+                    turboEnergy = Math.min(100, turboEnergy + 14);
+                    score += 100;
+                    sound.playImpact(0.28);
+                    showRaceMessage('✦ ENERGIA RECOLHIDA — +100 PONTOS', 900);
+                }
+            });
+
+            if (performance.now() < collisionCooldownUntil) return;
+            hazardClusters.forEach((cluster, index) => {
+                const hitKey = `${raceLap}-${index}`;
+                if (cluster.lastHitKey === hitKey) return;
+                if (progressDistance(trackProgress, cluster.progress) < 0.0105) {
+                    const hitBlock = cluster.blocked.some(offset => Math.abs(lateralOffset - offset) < 1.23);
+                    if (hitBlock) {
+                        cluster.lastHitKey = hitKey;
+                        collisionCooldownUntil = performance.now() + 850;
+                        forwardVelocity = Math.max(0.00072, forwardVelocity * 0.46);
+                        lateralVelocity += lateralOffset >= 0 ? -1.25 : 1.25;
+                        score = Math.max(0, score - 75);
+                        turboEnergy = Math.max(0, turboEnergy - 12);
+                        sound.playImpact(0.9);
+                        showRaceMessage('💥 IMPACTO! −75 PONTOS', 1300);
+                    }
+                }
+            });
         }
 
         function createMarble() {
@@ -1203,11 +1436,17 @@
         }
 
         function updateTimeDisplays() {
-            const current = gameState === 'racing' ? performance.now() - raceStartTime : elapsedRaceTime;
+            const current = gameState === 'racing'
+                ? performance.now() - raceStartTime
+                : gameState === 'paused'
+                    ? pausedAt - raceStartTime
+                    : elapsedRaceTime;
             const raceTime = document.getElementById('race-time');
             if (raceTime) raceTime.textContent = formatRaceTime(current);
             const menuBest = document.getElementById('menu-best-time');
             if (menuBest) menuBest.textContent = bestRaceTime > 0 ? formatRaceTime(bestRaceTime) : '--:--.---';
+            const menuBestScore = document.getElementById('menu-best-score');
+            if (menuBestScore) menuBestScore.textContent = String(bestScore);
         }
 
         function syncChoiceButtons() {
@@ -1234,6 +1473,7 @@
             gameState = 'menu';
             raceFinished = false;
             document.getElementById('finish-screen')?.classList.add('hidden');
+            document.getElementById('pause-screen')?.classList.add('hidden');
             const start = document.getElementById('start-screen');
             start?.classList.remove('hidden');
             updateTimeDisplays();
@@ -1244,6 +1484,7 @@
             const sequenceId = ++countdownSequenceId;
             document.getElementById('start-screen')?.classList.add('hidden');
             document.getElementById('finish-screen')?.classList.add('hidden');
+            document.getElementById('pause-screen')?.classList.add('hidden');
             resetRace(false);
             gameState = 'countdown';
             const screen = document.getElementById('countdown-screen');
@@ -1285,15 +1526,23 @@
             forwardVelocity = 0;
             elapsedRaceTime = Math.max(0, performance.now() - raceStartTime);
             finalRacePosition = Math.min(4, 1 + opponents.filter(o => o.finished).length);
+            const positionBonus = [0, 1500, 900, 500, 250][finalRacePosition] || 0;
+            const energyBonus = Math.floor(turboEnergy * 3);
+            score += positionBonus + energyBonus;
 
             if (finalRacePosition === 1 && (!bestRaceTime || elapsedRaceTime < bestRaceTime)) {
                 bestRaceTime = elapsedRaceTime;
                 localStorage.setItem('marbleRushBestTime', String(bestRaceTime));
             }
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('marbleRushBestScore', String(bestScore));
+            }
 
             document.getElementById('finish-position').textContent = `${finalRacePosition}/4`;
             document.getElementById('finish-time').textContent = formatRaceTime(elapsedRaceTime);
             document.getElementById('finish-best').textContent = bestRaceTime ? formatRaceTime(bestRaceTime) : '--:--.---';
+            document.getElementById('finish-score').textContent = String(score);
             document.getElementById('finish-title').textContent = finalRacePosition === 1 ? '🏆 VITÓRIA!' : '🏁 META ALCANÇADA';
             document.getElementById('finish-subtitle').textContent = finalRacePosition === 1
                 ? 'Dominaste o circuito do MARBLE RUSH™.'
@@ -1327,6 +1576,14 @@
             document.getElementById('race-position').textContent = `${Math.min(position, 4)}/4`;
             document.getElementById('race-lap').textContent = `${Math.min(raceLap, totalLaps)}/${totalLaps}`;
             document.getElementById('race-checkpoint').textContent = `${nextCheckpoint}/3`;
+            const scoreEl = document.getElementById('race-score');
+            if (scoreEl) scoreEl.textContent = String(score);
+            const orbsEl = document.getElementById('race-orbs');
+            if (orbsEl) orbsEl.textContent = `${collectedOrbs}/${TOTAL_RACE_ORBS}`;
+            const energyText = document.getElementById('turbo-energy-text');
+            if (energyText) energyText.textContent = `${Math.round(turboEnergy)}%`;
+            const energyBar = document.getElementById('turbo-energy-bar');
+            if (energyBar) energyBar.style.width = `${Math.max(0, Math.min(100, turboEnergy))}%`;
         }
 
         function resetRace(announce = true) {
@@ -1342,7 +1599,16 @@
             elapsedRaceTime = 0;
             raceStartTime = 0;
             finalRacePosition = 4;
+            pausedAt = 0;
+            score = 0;
+            collectedOrbs = 0;
+            turboEnergy = 100;
+            boostUntil = 0;
+            collisionCooldownUntil = 0;
             lastSafeProgress = trackProgress;
+            boostPads.forEach(pad => { pad.lastTriggerLap = 0; });
+            hazardClusters.forEach(cluster => { cluster.lastHitKey = ''; });
+            resetArcadeLap();
             opponents.forEach((o, i) => {
                 o.progress = 0.006 + i * 0.006;
                 o.lap = 0;
@@ -1358,17 +1624,25 @@
             lateralOffset = 0;
             lateralVelocity = 0;
             forwardVelocity = 0.00105;
-            showRaceMessage('FORA DA PISTA — REPOSIÇÃO NO ÚLTIMO PONTO SEGURO', 2200);
+            score = Math.max(0, score - 150);
+            turboEnergy = Math.max(0, turboEnergy - 20);
+            showRaceMessage('FORA DA PISTA — −150 PONTOS', 2200);
             sound.playImpact(0.65);
         }
 
         function triggerBoost() {
             if (gameState !== 'racing' || raceFinished || isFalling) return;
+            if (turboEnergy < 25) {
+                showRaceMessage('ENERGIA INSUFICIENTE — RECOLHE ESFERAS', 1200);
+                sound.playImpact(0.18);
+                return;
+            }
+            turboEnergy = Math.max(0, turboEnergy - 25);
             sound.init();
             sound.playBoost();
             isBoosted = true;
-            boostUntil = performance.now() + 1800;
-            showRaceMessage('TURBO ATIVADO!', 900);
+            boostUntil = performance.now() + 1550;
+            showRaceMessage('TURBO ATIVADO! −25% ENERGIA', 900);
         }
 
         function updateCheckpoints(previousProgress, currentProgress) {
@@ -1388,7 +1662,8 @@
                     } else {
                         raceLap++;
                         nextCheckpoint = 0;
-                        showRaceMessage(`VOLTA ${raceLap}/${totalLaps}`, 1800);
+                        resetArcadeLap();
+                        showRaceMessage(`VOLTA ${raceLap}/${totalLaps} — ESFERAS REATIVADAS`, 1800);
                     }
                 } else {
                     showRaceMessage('VOLTA INVÁLIDA — FALTOU UM CHECKPOINT', 1700);
@@ -1420,6 +1695,25 @@
             });
         }
 
+
+        function togglePause(forceResume = false) {
+            if (gameState === 'racing' && !forceResume) {
+                pausedAt = performance.now();
+                gameState = 'paused';
+                keys.left = false;
+                keys.right = false;
+                document.getElementById('pause-screen')?.classList.remove('hidden');
+                if (sound.rollGain && sound.ctx) sound.rollGain.gain.setTargetAtTime(0, sound.ctx.currentTime, 0.03);
+                return;
+            }
+            if (gameState === 'paused') {
+                raceStartTime += performance.now() - pausedAt;
+                gameState = 'racing';
+                document.getElementById('pause-screen')?.classList.add('hidden');
+                showRaceMessage('CORRIDA RETOMADA', 900);
+            }
+        }
+
         function setupPlayableControls() {
             const setKey = (key, value) => {
                 if (key === 'ArrowLeft' || key.toLowerCase() === 'a') keys.left = value;
@@ -1428,6 +1722,7 @@
             window.addEventListener('keydown', e => {
                 setKey(e.key, true);
                 if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) triggerBoost(); }
+                if ((e.key === 'Escape' || e.key.toLowerCase() === 'p') && !e.repeat && ['racing','paused'].includes(gameState)) togglePause();
                 if (e.key.toLowerCase() === 'r' && !['loading','menu'].includes(gameState)) startCountdown();
             });
             window.addEventListener('keyup', e => setKey(e.key, false));
@@ -1554,6 +1849,7 @@
             const delta = Math.min(clock.getDelta(), 0.033);
             const time = clock.getElapsedTime();
             isBoosted = performance.now() < boostUntil;
+            if (gameState === 'racing' && !isBoosted) turboEnergy = Math.min(100, turboEnergy + delta * 3.2);
 
             if (trackCurve && marble) {
                 if (gameState === 'racing' && !isFalling && !raceFinished) {
@@ -1646,6 +1942,7 @@
             }
 
             updateOpponents(delta, time);
+            updateArcadeFeatures(delta, time);
             updateRaceHUD();
             updateTimeDisplays();
 
@@ -1738,6 +2035,10 @@
             document.getElementById('btn-start-race').addEventListener('click', startCountdown);
             document.getElementById('btn-race-again').addEventListener('click', startCountdown);
             document.getElementById('btn-main-menu').addEventListener('click', showMainMenu);
+            document.getElementById('btn-pause').addEventListener('click', () => togglePause());
+            document.getElementById('btn-resume-race').addEventListener('click', () => togglePause(true));
+            document.getElementById('btn-pause-restart').addEventListener('click', startCountdown);
+            document.getElementById('btn-pause-menu').addEventListener('click', showMainMenu);
 
             document.getElementById('btn-audio').addEventListener('click', () => {
                 if (!sound.ctx) sound.init();
