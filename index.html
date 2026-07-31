@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MARBLE RUSH™ - Concept Engine 3D</title>
+    <title>MARBLE RUSH™ — Playable V2</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Three.js -->
@@ -87,6 +87,83 @@
         }
         .touch-control:active { transform: scale(.94); background: rgba(245,158,11,.42); }
         #race-message { text-shadow: 0 2px 18px rgba(0,0,0,.9); }
+
+        .screen-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background:
+                radial-gradient(circle at 20% 15%, rgba(245, 158, 11, .20), transparent 32%),
+                radial-gradient(circle at 82% 74%, rgba(124, 58, 237, .22), transparent 36%),
+                linear-gradient(145deg, rgba(3, 6, 18, .78), rgba(3, 6, 18, .94));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .screen-overlay.hidden { display: none; }
+        .menu-card {
+            width: min(760px, 100%);
+            max-height: 94vh;
+            overflow-y: auto;
+            border-radius: 30px;
+            padding: clamp(22px, 4vw, 38px);
+            background: linear-gradient(145deg, rgba(14, 18, 33, .94), rgba(7, 10, 22, .90));
+            border: 1px solid rgba(255,255,255,.15);
+            box-shadow: 0 30px 100px rgba(0,0,0,.55), 0 0 60px rgba(245,158,11,.10);
+        }
+        .menu-choice {
+            border: 1px solid rgba(255,255,255,.14);
+            background: rgba(255,255,255,.055);
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            transition: .2s ease;
+        }
+        .menu-choice:hover { transform: translateY(-2px); background: rgba(255,255,255,.11); }
+        .menu-choice.active {
+            border-color: rgba(251,191,36,.9);
+            background: linear-gradient(135deg, rgba(245,158,11,.33), rgba(239,68,68,.24));
+            box-shadow: 0 0 20px rgba(245,158,11,.17);
+        }
+        .primary-play {
+            background: linear-gradient(100deg, #f59e0b, #f97316, #ef4444);
+            box-shadow: 0 16px 45px rgba(249,115,22,.32);
+            transition: .2s ease;
+        }
+        .primary-play:hover { transform: translateY(-2px) scale(1.01); filter: brightness(1.08); }
+        .countdown-number {
+            font-size: clamp(88px, 20vw, 210px);
+            line-height: .9;
+            font-weight: 1000;
+            letter-spacing: -.08em;
+            color: white;
+            text-shadow: 0 0 35px rgba(245,158,11,.8), 0 10px 70px rgba(0,0,0,.9);
+            animation: countdownPop .68s cubic-bezier(.2,.8,.2,1);
+        }
+        @keyframes countdownPop {
+            0% { opacity: 0; transform: scale(.35); }
+            40% { opacity: 1; transform: scale(1.12); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .loader-ring {
+            width: 52px; height: 52px; border-radius: 999px;
+            border: 4px solid rgba(255,255,255,.14); border-top-color: #f59e0b;
+            animation: spinLoader .8s linear infinite;
+        }
+        @keyframes spinLoader { to { transform: rotate(360deg); } }
+        .hud-time { min-width: 64px; display: inline-block; text-align: right; }
+        @media (max-width: 767px) {
+            header h1 { font-size: 1.05rem !important; }
+            header p { display: none; }
+            .race-chip { gap: 7px !important; padding: 7px 9px !important; font-size: 9px !important; }
+            .race-chip strong { font-size: 12px !important; }
+            footer { transform: scale(.92); transform-origin: bottom right; }
+            .menu-card { border-radius: 22px; padding: 20px; }
+        }
     </style>
 </head>
 <body class="text-white overflow-hidden select-none">
@@ -94,7 +171,85 @@
     <!-- 3D Viewport -->
     <div id="webgl-container"></div>
 
-    <div class="relative z-10 w-full h-screen pointer-events-none flex flex-col justify-between p-4 md:p-6">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen-overlay">
+        <div class="text-center flex flex-col items-center gap-5">
+            <div class="loader-ring"></div>
+            <div>
+                <p class="text-2xl font-black tracking-widest text-amber-400">MARBLE RUSH™</p>
+                <p class="text-xs mt-2 text-slate-300 tracking-[.3em]">A CARREGAR O MOTOR 3D</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cinematic Start Menu -->
+    <div id="start-screen" class="screen-overlay hidden">
+        <section class="menu-card text-white">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-[10px] font-black tracking-[.34em] text-amber-400">PLAYABLE BUILD V2</p>
+                    <h2 class="text-4xl md:text-6xl font-black leading-none mt-2 bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-orange-400 to-red-500">MARBLE<br>RUSH™</h2>
+                    <p class="mt-3 max-w-lg text-sm text-slate-300">Escolhe o circuito, prepara o teu berlinde e conquista três voltas contra adversários controlados pelo jogo.</p>
+                </div>
+                <div class="hidden sm:flex w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-orange-600 to-purple-700 items-center justify-center text-3xl font-black shadow-2xl">MR</div>
+            </div>
+
+            <div class="mt-7">
+                <p class="text-[10px] font-black tracking-[.24em] text-slate-400 mb-3">ESCOLHER CIRCUITO</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <button class="menu-choice menu-env-btn active" data-env="volcano">🌋 Vulcão</button>
+                    <button class="menu-choice menu-env-btn" data-env="ice">❄️ Glaciar</button>
+                    <button class="menu-choice menu-env-btn" data-env="space">🚀 Espaço</button>
+                    <button class="menu-choice menu-env-btn" data-env="portugal">🇵🇹 Lisboa</button>
+                </div>
+            </div>
+
+            <div class="mt-5">
+                <p class="text-[10px] font-black tracking-[.24em] text-slate-400 mb-3">ESCOLHER BERLINDE</p>
+                <div class="grid grid-cols-3 md:grid-cols-6 gap-2">
+                    <button class="menu-choice menu-marble-btn active" data-material="lava">🔥 Lava</button>
+                    <button class="menu-choice menu-marble-btn" data-material="cristal">💎 Cristal</button>
+                    <button class="menu-choice menu-marble-btn" data-material="energia">⚡ Energia</button>
+                    <button class="menu-choice menu-marble-btn" data-material="galaxie">🌌 Galáxia</button>
+                    <button class="menu-choice menu-marble-btn" data-material="ouro">🥇 Ouro</button>
+                    <button class="menu-choice menu-marble-btn" data-material="arcoiris">🌈 Arco-Íris</button>
+                </div>
+            </div>
+
+            <div class="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="text-xs text-slate-400">
+                    <p><span class="text-white font-bold">Controlos:</span> A/D ou ←/→ · Espaço para turbo · R para reiniciar</p>
+                    <p class="mt-1">Melhor tempo: <strong id="menu-best-time" class="text-amber-300">--:--.---</strong></p>
+                </div>
+                <button id="btn-start-race" class="primary-play rounded-2xl px-8 py-4 text-sm font-black tracking-[.18em] text-white shrink-0"><i class="fa-solid fa-play mr-2"></i> JOGAR</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Countdown -->
+    <div id="countdown-screen" class="fixed inset-0 z-[120] hidden items-center justify-center pointer-events-none bg-black/25 backdrop-blur-[2px]">
+        <div id="countdown-number" class="countdown-number">3</div>
+    </div>
+
+    <!-- Finish Screen -->
+    <div id="finish-screen" class="screen-overlay hidden">
+        <section class="menu-card max-w-xl text-center">
+            <p id="finish-kicker" class="text-[10px] font-black tracking-[.34em] text-amber-400">CORRIDA CONCLUÍDA</p>
+            <h2 id="finish-title" class="text-4xl md:text-6xl font-black mt-3">🏆 VITÓRIA!</h2>
+            <p id="finish-subtitle" class="mt-3 text-sm text-slate-300">Dominaste o circuito do MARBLE RUSH™.</p>
+            <div class="grid grid-cols-3 gap-2 mt-7">
+                <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">POSIÇÃO</p><strong id="finish-position" class="text-2xl">1/4</strong></div>
+                <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">TEMPO</p><strong id="finish-time" class="text-lg text-amber-300">00:00.000</strong></div>
+                <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">RECORDE</p><strong id="finish-best" class="text-lg text-cyan-300">--:--.---</strong></div>
+            </div>
+            <div class="mt-7 flex flex-col sm:flex-row justify-center gap-3">
+                <button id="btn-race-again" class="primary-play rounded-2xl px-7 py-4 text-sm font-black"><i class="fa-solid fa-rotate-right mr-2"></i> JOGAR NOVAMENTE</button>
+                <button id="btn-main-menu" class="glass-button rounded-2xl px-7 py-4 text-sm font-bold"><i class="fa-solid fa-house mr-2"></i> MENU PRINCIPAL</button>
+            </div>
+        </section>
+    </div>
+
+    <div id="game-ui" class="relative z-10 w-full h-screen pointer-events-none flex flex-col justify-between p-4 md:p-6">
 
         <!-- Top Header Navigation & Status -->
         <header class="flex justify-between items-center pointer-events-auto">
@@ -106,7 +261,7 @@
                     <h1 class="text-2xl font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-400 to-red-500">
                         MARBLE RUSH<span class="text-xs align-super text-amber-400 font-normal">™ AAA</span>
                     </h1>
-                    <p class="text-xs text-slate-400 tracking-wider">NEXT-GEN PHYSICS & VISUAL EXPERIENCE</p>
+                    <p class="text-xs text-slate-400 tracking-wider">PLAYABLE V2 · RACE MODE · 3 LAPS</p>
                 </div>
             </div>
 
@@ -263,6 +418,8 @@
                 <span class="text-slate-400">VOLTA <strong id="race-lap" class="text-amber-300 text-base ml-1">1/3</strong></span>
                 <span class="w-px h-5 bg-white/15"></span>
                 <span class="text-slate-400">CHECKPOINT <strong id="race-checkpoint" class="text-cyan-300 text-base ml-1">0/3</strong></span>
+                <span class="w-px h-5 bg-white/15"></span>
+                <span class="text-slate-400">TEMPO <strong id="race-time" class="hud-time text-emerald-300 text-base ml-1">00:00.000</strong></span>
             </div>
             <div id="race-message" class="text-center text-sm font-black tracking-wider text-white transition-opacity duration-300">
                 ← → ou A/D para dirigir • ESPAÇO para turbo
@@ -760,6 +917,12 @@
         const checkpointFractions = [0.25, 0.50, 0.75];
         let nextCheckpoint = 0;
         let raceFinished = false;
+        let gameState = 'loading'; // loading | menu | countdown | racing | finished
+        let raceStartTime = 0;
+        let elapsedRaceTime = 0;
+        let finalRacePosition = 4;
+        let countdownSequenceId = 0;
+        let bestRaceTime = Number(localStorage.getItem('marbleRushBestTime') || 0);
         const TRACK_HALF_WIDTH = 5.25;
         const keys = { left: false, right: false };
         let opponents = [];
@@ -1030,6 +1193,124 @@
             });
         }
 
+        function formatRaceTime(ms) {
+            if (!ms || ms < 0) return '00:00.000';
+            const total = Math.floor(ms);
+            const minutes = Math.floor(total / 60000);
+            const seconds = Math.floor((total % 60000) / 1000);
+            const millis = total % 1000;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
+        }
+
+        function updateTimeDisplays() {
+            const current = gameState === 'racing' ? performance.now() - raceStartTime : elapsedRaceTime;
+            const raceTime = document.getElementById('race-time');
+            if (raceTime) raceTime.textContent = formatRaceTime(current);
+            const menuBest = document.getElementById('menu-best-time');
+            if (menuBest) menuBest.textContent = bestRaceTime > 0 ? formatRaceTime(bestRaceTime) : '--:--.---';
+        }
+
+        function syncChoiceButtons() {
+            document.querySelectorAll('.menu-env-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.env === currentEnv));
+            document.querySelectorAll('.menu-marble-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.material === currentMaterial));
+            document.querySelectorAll('.env-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.env === currentEnv));
+            document.querySelectorAll('.marble-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.material === currentMaterial));
+        }
+
+        function selectEnvironment(env) {
+            currentEnv = env;
+            createEnvironment(env);
+            resetRace(false);
+            syncChoiceButtons();
+        }
+
+        function selectMarble(type) {
+            setMarbleMaterial(type);
+            syncChoiceButtons();
+        }
+
+        function showMainMenu() {
+            countdownSequenceId++;
+            gameState = 'menu';
+            raceFinished = false;
+            document.getElementById('finish-screen')?.classList.add('hidden');
+            const start = document.getElementById('start-screen');
+            start?.classList.remove('hidden');
+            updateTimeDisplays();
+            syncChoiceButtons();
+        }
+
+        function startCountdown() {
+            const sequenceId = ++countdownSequenceId;
+            document.getElementById('start-screen')?.classList.add('hidden');
+            document.getElementById('finish-screen')?.classList.add('hidden');
+            resetRace(false);
+            gameState = 'countdown';
+            const screen = document.getElementById('countdown-screen');
+            const number = document.getElementById('countdown-number');
+            screen.classList.remove('hidden');
+            screen.classList.add('flex');
+            const steps = ['3', '2', '1', 'RUSH!'];
+            steps.forEach((value, index) => {
+                setTimeout(() => {
+                    if (sequenceId !== countdownSequenceId) return;
+                    number.textContent = value;
+                    number.style.animation = 'none';
+                    void number.offsetWidth;
+                    number.style.animation = '';
+                    if (value === 'RUSH!') {
+                        sound.init();
+                        sound.playBoost();
+                        raceStartTime = performance.now();
+                        elapsedRaceTime = 0;
+                        gameState = 'racing';
+                        showRaceMessage('RUSH! — CONQUISTA A PRIMEIRA POSIÇÃO', 1800);
+                        setTimeout(() => {
+                            if (sequenceId !== countdownSequenceId) return;
+                            screen.classList.add('hidden');
+                            screen.classList.remove('flex');
+                        }, 620);
+                    } else {
+                        sound.init();
+                        sound.playImpact(0.25);
+                    }
+                }, index * 820);
+            });
+        }
+
+        function finishRace() {
+            if (raceFinished) return;
+            raceFinished = true;
+            gameState = 'finished';
+            forwardVelocity = 0;
+            elapsedRaceTime = Math.max(0, performance.now() - raceStartTime);
+            finalRacePosition = Math.min(4, 1 + opponents.filter(o => o.finished).length);
+
+            if (finalRacePosition === 1 && (!bestRaceTime || elapsedRaceTime < bestRaceTime)) {
+                bestRaceTime = elapsedRaceTime;
+                localStorage.setItem('marbleRushBestTime', String(bestRaceTime));
+            }
+
+            document.getElementById('finish-position').textContent = `${finalRacePosition}/4`;
+            document.getElementById('finish-time').textContent = formatRaceTime(elapsedRaceTime);
+            document.getElementById('finish-best').textContent = bestRaceTime ? formatRaceTime(bestRaceTime) : '--:--.---';
+            document.getElementById('finish-title').textContent = finalRacePosition === 1 ? '🏆 VITÓRIA!' : '🏁 META ALCANÇADA';
+            document.getElementById('finish-subtitle').textContent = finalRacePosition === 1
+                ? 'Dominaste o circuito do MARBLE RUSH™.'
+                : `Terminaste em ${finalRacePosition}. Afina a trajetória e tenta novamente.`;
+            document.getElementById('finish-kicker').textContent = finalRacePosition === 1 ? 'CAMPEÃO DO CIRCUITO' : 'CORRIDA CONCLUÍDA';
+            showRaceMessage(finalRacePosition === 1 ? '🏆 PRIMEIRO LUGAR!' : `META — ${finalRacePosition}.º LUGAR`, 3500);
+            updateTimeDisplays();
+
+            if (finalRacePosition === 1) {
+                speakAnnouncerLine('Vitória espetacular! O berlinde cruza a meta em primeiro lugar e conquista o circuito do MARBLE RUSH!');
+            } else {
+                speakAnnouncerLine(`Corrida concluída em ${finalRacePosition}.º lugar! Uma nova tentativa pode mudar completamente o resultado!`);
+            }
+
+            setTimeout(() => document.getElementById('finish-screen')?.classList.remove('hidden'), 1050);
+        }
+
         function showRaceMessage(text, duration = 1800) {
             const el = document.getElementById('race-message');
             if (!el) return;
@@ -1042,7 +1323,7 @@
         function updateRaceHUD() {
             const playerDistance = (raceLap - 1) + trackProgress;
             const ahead = opponents.filter(o => (o.lap + o.progress) > playerDistance && !o.finished).length;
-            const position = raceFinished ? 1 + opponents.filter(o => o.finished).length : 1 + ahead;
+            const position = raceFinished ? finalRacePosition : 1 + ahead;
             document.getElementById('race-position').textContent = `${Math.min(position, 4)}/4`;
             document.getElementById('race-lap').textContent = `${Math.min(raceLap, totalLaps)}/${totalLaps}`;
             document.getElementById('race-checkpoint').textContent = `${nextCheckpoint}/3`;
@@ -1058,6 +1339,9 @@
             raceLap = 1;
             nextCheckpoint = 0;
             raceFinished = false;
+            elapsedRaceTime = 0;
+            raceStartTime = 0;
+            finalRacePosition = 4;
             lastSafeProgress = trackProgress;
             opponents.forEach((o, i) => {
                 o.progress = 0.006 + i * 0.006;
@@ -1079,7 +1363,7 @@
         }
 
         function triggerBoost() {
-            if (raceFinished || isFalling) return;
+            if (gameState !== 'racing' || raceFinished || isFalling) return;
             sound.init();
             sound.playBoost();
             isBoosted = true;
@@ -1100,10 +1384,7 @@
             if (currentProgress < previousProgress) {
                 if (nextCheckpoint === checkpointFractions.length) {
                     if (raceLap >= totalLaps) {
-                        raceFinished = true;
-                        forwardVelocity = 0;
-                        showRaceMessage('🏆 CORRIDA CONCLUÍDA! MARBLE RUSH™', 6000);
-                        speakAnnouncerLine('Vitória espetacular! O berlinde cruza a meta e conquista o circuito do MARBLE RUSH!');
+                        finishRace();
                     } else {
                         raceLap++;
                         nextCheckpoint = 0;
@@ -1117,6 +1398,7 @@
         }
 
         function updateOpponents(delta, time) {
+            if (gameState !== 'racing') return;
             opponents.forEach((o, i) => {
                 if (!trackCurve || o.finished) return;
                 const previous = o.progress;
@@ -1146,7 +1428,7 @@
             window.addEventListener('keydown', e => {
                 setKey(e.key, true);
                 if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) triggerBoost(); }
-                if (e.key.toLowerCase() === 'r') resetRace();
+                if (e.key.toLowerCase() === 'r' && !['loading','menu'].includes(gameState)) startCountdown();
             });
             window.addEventListener('keyup', e => setKey(e.key, false));
 
@@ -1274,7 +1556,7 @@
             isBoosted = performance.now() < boostUntil;
 
             if (trackCurve && marble) {
-                if (!isFalling && !raceFinished) {
+                if (gameState === 'racing' && !isFalling && !raceFinished) {
                     const previousProgress = trackProgress;
                     const frame = getTrackFrame(trackProgress);
                     const steer = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
@@ -1323,7 +1605,7 @@
                         fallVelocity.y += 2.2;
                         showRaceMessage('CUIDADO! BERLINDE FORA DA PISTA', 1200);
                     }
-                } else if (isFalling) {
+                } else if (gameState === 'racing' && isFalling) {
                     fallTimer += delta;
                     fallVelocity.y -= 18 * delta;
                     marble.position.addScaledVector(fallVelocity, delta);
@@ -1331,7 +1613,7 @@
                     if (fallTimer > 1.65 || marble.position.y < -75) respawnMarble();
                 }
 
-                speed = raceFinished ? 0 : Math.max(0, Math.floor((forwardVelocity + (isBoosted ? 0.00135 : 0)) * 52000));
+                speed = gameState === 'racing' && !raceFinished ? Math.max(0, Math.floor((forwardVelocity + (isBoosted ? 0.00135 : 0)) * 52000)) : 0;
                 updateSpeedometer(speed);
                 sound.updateRollSound(isFalling ? 0 : speed);
 
@@ -1342,12 +1624,20 @@
 
                 if (camMode === 'follow') {
                     const cameraFrame = getTrackFrame(trackProgress);
-                    const desired = marble.position.clone()
-                        .addScaledVector(cameraFrame.tangent, -16)
-                        .addScaledVector(cameraFrame.up, 8.5)
-                        .addScaledVector(cameraFrame.side, lateralOffset * 0.18);
+                    let desired;
+                    let lookTarget;
+                    if (gameState === 'menu' || gameState === 'loading') {
+                        const orbitAngle = time * 0.13;
+                        desired = cameraFrame.center.clone().add(new THREE.Vector3(Math.sin(orbitAngle) * 25, 15, Math.cos(orbitAngle) * 25));
+                        lookTarget = cameraFrame.center.clone().addScaledVector(cameraFrame.up, 2);
+                    } else {
+                        desired = marble.position.clone()
+                            .addScaledVector(cameraFrame.tangent, -16)
+                            .addScaledVector(cameraFrame.up, 8.5)
+                            .addScaledVector(cameraFrame.side, lateralOffset * 0.18);
+                        lookTarget = marble.position.clone().addScaledVector(cameraFrame.tangent, 10).addScaledVector(cameraFrame.up, 1.2);
+                    }
                     camera.position.lerp(desired, 1 - Math.pow(0.002, delta));
-                    const lookTarget = marble.position.clone().addScaledVector(cameraFrame.tangent, 10).addScaledVector(cameraFrame.up, 1.2);
                     camera.lookAt(lookTarget);
                 } else {
                     controls.target.lerp(marble.position, 0.08);
@@ -1357,6 +1647,7 @@
 
             updateOpponents(delta, time);
             updateRaceHUD();
+            updateTimeDisplays();
 
             if (particlesSystem) particlesSystem.rotation.y = time * 0.05;
 
@@ -1438,6 +1729,16 @@
         }
 
         function setupUIEventListeners() {
+            document.querySelectorAll('.menu-env-btn').forEach(btn => {
+                btn.addEventListener('click', () => selectEnvironment(btn.dataset.env));
+            });
+            document.querySelectorAll('.menu-marble-btn').forEach(btn => {
+                btn.addEventListener('click', () => selectMarble(btn.dataset.material));
+            });
+            document.getElementById('btn-start-race').addEventListener('click', startCountdown);
+            document.getElementById('btn-race-again').addEventListener('click', startCountdown);
+            document.getElementById('btn-main-menu').addEventListener('click', showMainMenu);
+
             document.getElementById('btn-audio').addEventListener('click', () => {
                 if (!sound.ctx) sound.init();
                 else sound.enabled = !sound.enabled;
@@ -1456,7 +1757,7 @@
             document.getElementById('btn-restart').addEventListener('click', () => {
                 sound.init();
                 sound.playImpact(0.8);
-                resetRace();
+                startCountdown();
             });
 
             document.querySelectorAll('.marble-btn').forEach(btn => {
@@ -1465,7 +1766,7 @@
                     sound.playImpact(0.4);
                     document.querySelectorAll('.marble-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    setMarbleMaterial(btn.dataset.material);
+                    selectMarble(btn.dataset.material);
                 });
             });
 
@@ -1475,7 +1776,8 @@
                     sound.playBoost();
                     document.querySelectorAll('.env-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    createEnvironment(btn.dataset.env);
+                    selectEnvironment(btn.dataset.env);
+                    if (gameState === 'racing' || gameState === 'countdown') startCountdown();
                 });
             });
 
@@ -1579,8 +1881,13 @@
             createEnvironment('volcano');
             setupUIEventListeners();
             setupPlayableControls();
-            showRaceMessage('← → ou A/D para dirigir • ESPAÇO para turbo', 5000);
+            resetRace(false);
+            syncChoiceButtons();
             animate();
+            setTimeout(() => {
+                document.getElementById('loading-screen')?.classList.add('hidden');
+                showMainMenu();
+            }, 650);
         };
     </script>
 </body>
