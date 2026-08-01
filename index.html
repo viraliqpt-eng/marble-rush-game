@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MARBLE RUSH™ — Playable V2</title>
+    <title>MARBLE RUSH™ — Playable V4 · Campeonato</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Three.js -->
@@ -156,6 +156,45 @@
         }
         @keyframes spinLoader { to { transform: rotate(360deg); } }
         .hud-time { min-width: 64px; display: inline-block; text-align: right; }
+        .career-stat {
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(255,255,255,.045);
+            border-radius: 16px;
+            padding: 12px 14px;
+        }
+        .mode-choice {
+            border: 1px solid rgba(255,255,255,.14);
+            background: rgba(255,255,255,.055);
+            border-radius: 16px;
+            padding: 13px 15px;
+            text-align: left;
+            transition: .2s ease;
+        }
+        .mode-choice:hover { transform: translateY(-2px); border-color: rgba(245,158,11,.55); }
+        .mode-choice.active {
+            border-color: rgba(245,158,11,.92);
+            background: linear-gradient(135deg, rgba(245,158,11,.20), rgba(239,68,68,.13));
+            box-shadow: 0 0 24px rgba(245,158,11,.10);
+        }
+        .menu-choice.locked { opacity: .43; filter: grayscale(.72); cursor: not-allowed; position: relative; }
+        .menu-choice.locked::after {
+            content: "🔒";
+            position: absolute;
+            right: 7px;
+            top: 5px;
+            font-size: 11px;
+        }
+        .menu-choice.marble-locked::after { content: "🔐"; }
+        .track-stars { display:block; font-size:10px; color:#fbbf24; margin-top:4px; letter-spacing:1px; }
+        .championship-strip {
+            border: 1px solid rgba(34,211,238,.22);
+            background: linear-gradient(135deg, rgba(8,145,178,.10), rgba(124,58,237,.09));
+            border-radius: 16px;
+            padding: 12px 14px;
+        }
+        .career-progress { height: 7px; border-radius: 999px; overflow:hidden; background: rgba(255,255,255,.08); }
+        .career-progress > div { height:100%; border-radius:inherit; background: linear-gradient(90deg,#22d3ee,#f59e0b,#ef4444); transition: width .35s ease; }
+        .star-result { letter-spacing: .18em; text-shadow: 0 0 16px rgba(251,191,36,.42); }
         @media (max-width: 767px) {
             header h1 { font-size: 1.05rem !important; }
             header p { display: none; }
@@ -187,21 +226,42 @@
         <section class="menu-card text-white">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <p class="text-[10px] font-black tracking-[.34em] text-amber-400">PLAYABLE BUILD V3 · ARCADE UPDATE</p>
+                    <p class="text-[10px] font-black tracking-[.34em] text-amber-400">PLAYABLE BUILD V4 · CAMPEONATO</p>
                     <h2 class="text-4xl md:text-6xl font-black leading-none mt-2 bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-orange-400 to-red-500">MARBLE<br>RUSH™</h2>
-                    <p class="mt-3 max-w-lg text-sm text-slate-300">Escolhe o circuito, recolhe energia, evita obstáculos e conquista três voltas contra adversários controlados pelo jogo.</p>
+                    <p class="mt-3 max-w-lg text-sm text-slate-300">Constrói a tua carreira, conquista estrelas, desbloqueia circuitos e vence o Campeonato MARBLE RUSH™.</p>
                 </div>
                 <div class="hidden sm:flex w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-orange-600 to-purple-700 items-center justify-center text-3xl font-black shadow-2xl">MR</div>
             </div>
 
-            <div class="mt-7">
+            <div class="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div class="career-stat"><p class="text-[9px] tracking-wider text-slate-400">NÍVEL</p><strong id="career-level" class="text-xl text-cyan-300">1</strong></div>
+                <div class="career-stat"><p class="text-[9px] tracking-wider text-slate-400">ESTRELAS</p><strong id="career-stars" class="text-xl text-amber-300">0/12</strong></div>
+                <div class="career-stat"><p class="text-[9px] tracking-wider text-slate-400">MOEDAS</p><strong id="career-coins" class="text-xl text-yellow-300">0</strong></div>
+                <div class="career-stat"><p class="text-[9px] tracking-wider text-slate-400">TÍTULOS</p><strong id="career-crowns" class="text-xl text-violet-300">0</strong></div>
+            </div>
+
+            <div class="mt-5">
+                <p class="text-[10px] font-black tracking-[.24em] text-slate-400 mb-3">MODO DE JOGO</p>
+                <div class="grid sm:grid-cols-2 gap-2">
+                    <button class="mode-choice mode-btn active" data-mode="quick"><strong class="block text-sm">⚡ CORRIDA RÁPIDA</strong><span class="text-[11px] text-slate-400">Escolhe qualquer circuito desbloqueado.</span></button>
+                    <button class="mode-choice mode-btn" data-mode="championship"><strong class="block text-sm">🏆 CAMPEONATO</strong><span class="text-[11px] text-slate-400">Quatro provas consecutivas e pontos de classificação.</span></button>
+                </div>
+                <div class="championship-strip mt-3">
+                    <div class="flex items-center justify-between gap-3 text-xs"><span id="career-rank" class="font-bold text-cyan-300">NOVATO</span><span id="career-next-level" class="text-slate-400">Próximo nível: 3 estrelas</span></div>
+                    <div class="career-progress mt-2"><div id="career-progress-bar" style="width:0%"></div></div>
+                    <p id="mode-description" class="text-[11px] text-slate-400 mt-2">Corrida rápida: escolhe um circuito e tenta melhorar estrelas, tempo e pontuação.</p>
+                </div>
+            </div>
+
+            <div class="mt-5">
                 <p class="text-[10px] font-black tracking-[.24em] text-slate-400 mb-3">ESCOLHER CIRCUITO</p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <button class="menu-choice menu-env-btn active" data-env="volcano">🌋 Vulcão</button>
-                    <button class="menu-choice menu-env-btn" data-env="ice">❄️ Glaciar</button>
-                    <button class="menu-choice menu-env-btn" data-env="space">🚀 Espaço</button>
-                    <button class="menu-choice menu-env-btn" data-env="portugal">🇵🇹 Lisboa</button>
+                    <button class="menu-choice menu-env-btn active" data-env="volcano">🌋 Vulcão<span id="track-stars-volcano" class="track-stars">☆☆☆</span></button>
+                    <button class="menu-choice menu-env-btn" data-env="ice">❄️ Glaciar<span id="track-stars-ice" class="track-stars">☆☆☆</span></button>
+                    <button class="menu-choice menu-env-btn" data-env="space">🚀 Espaço<span id="track-stars-space" class="track-stars">☆☆☆</span></button>
+                    <button class="menu-choice menu-env-btn" data-env="portugal">🇵🇹 Lisboa<span id="track-stars-portugal" class="track-stars">☆☆☆</span></button>
                 </div>
+                <p id="menu-lock-message" class="min-h-[18px] mt-2 text-[11px] text-amber-300"></p>
             </div>
 
             <div class="mt-5">
@@ -220,8 +280,9 @@
                 <div class="text-xs text-slate-400">
                     <p><span class="text-white font-bold">Controlos:</span> A/D ou ←/→ · Espaço para turbo · P/Esc pausa · R reinicia</p>
                     <p class="mt-1">Melhor tempo: <strong id="menu-best-time" class="text-amber-300">--:--.---</strong> · Melhor pontuação: <strong id="menu-best-score" class="text-cyan-300">0</strong></p>
+                    <p id="championship-summary" class="mt-1 text-violet-300">Campeonato: 0 títulos · 0 vitórias</p>
                 </div>
-                <button id="btn-start-race" class="primary-play rounded-2xl px-8 py-4 text-sm font-black tracking-[.18em] text-white shrink-0"><i class="fa-solid fa-play mr-2"></i> JOGAR</button>
+                <button id="btn-start-race" class="primary-play rounded-2xl px-8 py-4 text-sm font-black tracking-[.18em] text-white shrink-0"><i class="fa-solid fa-play mr-2"></i> <span id="start-button-label">JOGAR</span></button>
             </div>
         </section>
     </div>
@@ -237,13 +298,17 @@
             <p id="finish-kicker" class="text-[10px] font-black tracking-[.34em] text-amber-400">CORRIDA CONCLUÍDA</p>
             <h2 id="finish-title" class="text-4xl md:text-6xl font-black mt-3">🏆 VITÓRIA!</h2>
             <p id="finish-subtitle" class="mt-3 text-sm text-slate-300">Dominaste o circuito do MARBLE RUSH™.</p>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-7">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-7">
                 <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">POSIÇÃO</p><strong id="finish-position" class="text-2xl">1/4</strong></div>
                 <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">TEMPO</p><strong id="finish-time" class="text-lg text-amber-300">00:00.000</strong></div>
                 <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">RECORDE</p><strong id="finish-best" class="text-lg text-cyan-300">--:--.---</strong></div>
                 <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">PONTUAÇÃO</p><strong id="finish-score" class="text-lg text-violet-300">0</strong></div>
+                <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">ESTRELAS</p><strong id="finish-stars" class="star-result text-xl text-amber-300">☆☆☆</strong></div>
+                <div class="race-chip rounded-2xl p-3"><p class="text-[9px] text-slate-400">PRÉMIO</p><strong id="finish-reward" class="text-lg text-yellow-300">+0 🪙</strong></div>
             </div>
+            <p id="finish-championship" class="mt-4 text-xs font-bold text-cyan-300 hidden"></p>
             <div class="mt-7 flex flex-col sm:flex-row justify-center gap-3">
+                <button id="btn-next-round" class="primary-play rounded-2xl px-7 py-4 text-sm font-black hidden"><i class="fa-solid fa-forward mr-2"></i> PRÓXIMA PROVA</button>
                 <button id="btn-race-again" class="primary-play rounded-2xl px-7 py-4 text-sm font-black"><i class="fa-solid fa-rotate-right mr-2"></i> JOGAR NOVAMENTE</button>
                 <button id="btn-main-menu" class="glass-button rounded-2xl px-7 py-4 text-sm font-bold"><i class="fa-solid fa-house mr-2"></i> MENU PRINCIPAL</button>
             </div>
@@ -277,7 +342,7 @@
                     <h1 class="text-2xl font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-400 to-red-500">
                         MARBLE RUSH<span class="text-xs align-super text-amber-400 font-normal">™ AAA</span>
                     </h1>
-                    <p class="text-xs text-slate-400 tracking-wider">PLAYABLE V3 · ARCADE RACE · 3 LAPS</p>
+                    <p class="text-xs text-slate-400 tracking-wider">PLAYABLE V4 · CAREER & CHAMPIONSHIP · 3 LAPS</p>
                 </div>
             </div>
 
@@ -438,6 +503,8 @@
                 <span class="text-slate-400">TEMPO <strong id="race-time" class="hud-time text-emerald-300 text-base ml-1">00:00.000</strong></span>
             </div>
             <div class="race-chip rounded-2xl px-3 py-2 flex items-center gap-3 text-xs pointer-events-auto">
+                <span id="race-mode-label" class="text-cyan-300 font-bold">CORRIDA RÁPIDA</span>
+                <span class="w-px h-5 bg-white/15"></span>
                 <span class="text-slate-400">PONTOS <strong id="race-score" class="text-violet-300 text-base ml-1">0</strong></span>
                 <span class="w-px h-5 bg-white/15"></span>
                 <span class="text-slate-400">ENERGIA <strong id="race-orbs" class="text-cyan-300 text-base ml-1">0/24</strong></span>
@@ -955,6 +1022,29 @@
         let pausedAt = 0;
         let bestRaceTime = Number(localStorage.getItem('marbleRushBestTime') || 0);
         let bestScore = Number(localStorage.getItem('marbleRushBestScore') || 0);
+        const championshipOrder = ['volcano', 'ice', 'space', 'portugal'];
+        const trackNames = { volcano: 'Vulcão Infernal', ice: 'Glaciar Cristalino', space: 'Órbita Zero', portugal: 'Lisboa Dourada' };
+        const trackUnlockStars = { volcano: 0, ice: 2, space: 5, portugal: 8 };
+        const marbleUnlockStars = { lava: 0, cristal: 0, energia: 2, galaxie: 4, ouro: 7, arcoiris: 10 };
+        const defaultCareer = {
+            coins: 0,
+            wins: 0,
+            races: 0,
+            crowns: 0,
+            trackStars: { volcano: 0, ice: 0, space: 0, portugal: 0 }
+        };
+        let career;
+        try {
+            career = { ...defaultCareer, ...(JSON.parse(localStorage.getItem('marbleRushCareerV4') || 'null') || {}) };
+            career.trackStars = { ...defaultCareer.trackStars, ...(career.trackStars || {}) };
+        } catch (e) {
+            career = JSON.parse(JSON.stringify(defaultCareer));
+        }
+        let gameMode = 'quick';
+        let championshipRound = 0;
+        let championshipPoints = 0;
+        let lastEarnedStars = 0;
+        let lastCoinReward = 0;
         let score = 0;
         let collectedOrbs = 0;
         let turboEnergy = 100;
@@ -1435,6 +1525,86 @@
             return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
         }
 
+        function totalCareerStars() {
+            return championshipOrder.reduce((sum, env) => sum + Number(career.trackStars[env] || 0), 0);
+        }
+
+        function saveCareer() {
+            localStorage.setItem('marbleRushCareerV4', JSON.stringify(career));
+        }
+
+        function starText(value) {
+            const stars = Math.max(0, Math.min(3, Number(value) || 0));
+            return '★'.repeat(stars) + '☆'.repeat(3 - stars);
+        }
+
+        function isTrackUnlocked(env) {
+            return totalCareerStars() >= (trackUnlockStars[env] || 0);
+        }
+
+        function isMarbleUnlocked(type) {
+            return totalCareerStars() >= (marbleUnlockStars[type] || 0);
+        }
+
+        function careerRank(stars) {
+            if (stars >= 12) return 'LENDA DO RUSH';
+            if (stars >= 9) return 'CAMPEÃO';
+            if (stars >= 6) return 'MESTRE';
+            if (stars >= 3) return 'PILOTO';
+            return 'NOVATO';
+        }
+
+        function updateCareerUI() {
+            const stars = totalCareerStars();
+            const level = Math.min(5, Math.floor(stars / 3) + 1);
+            const levelStart = (level - 1) * 3;
+            const nextTarget = Math.min(12, level * 3);
+            const progress = level >= 5 ? 100 : ((stars - levelStart) / 3) * 100;
+            const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+            setText('career-level', String(level));
+            setText('career-stars', `${stars}/12`);
+            setText('career-coins', String(career.coins || 0));
+            setText('career-crowns', String(career.crowns || 0));
+            setText('career-rank', careerRank(stars));
+            setText('career-next-level', level >= 5 ? 'Progressão máxima alcançada' : `Próximo nível: ${nextTarget} estrelas`);
+            setText('championship-summary', `Campeonato: ${career.crowns || 0} títulos · ${career.wins || 0} vitórias · ${career.races || 0} provas`);
+            const bar = document.getElementById('career-progress-bar');
+            if (bar) bar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
+
+            championshipOrder.forEach(env => {
+                setText(`track-stars-${env}`, starText(career.trackStars[env]));
+            });
+
+            document.querySelectorAll('.menu-env-btn, .env-btn').forEach(btn => {
+                const env = btn.dataset.env;
+                const progressionLocked = !isTrackUnlocked(env);
+                const championshipLocked = gameMode === 'championship' && env !== championshipOrder[championshipRound];
+                btn.classList.toggle('locked', progressionLocked || championshipLocked);
+                btn.setAttribute('aria-disabled', progressionLocked || championshipLocked ? 'true' : 'false');
+                btn.title = progressionLocked
+                    ? `Requer ${trackUnlockStars[env]} estrelas`
+                    : championshipLocked ? 'Circuito definido pela ronda do campeonato' : trackNames[env];
+            });
+
+            document.querySelectorAll('.menu-marble-btn, .marble-btn').forEach(btn => {
+                const locked = !isMarbleUnlocked(btn.dataset.material);
+                btn.classList.toggle('locked', locked);
+                btn.classList.toggle('marble-locked', locked);
+                btn.setAttribute('aria-disabled', locked ? 'true' : 'false');
+                btn.title = locked ? `Requer ${marbleUnlockStars[btn.dataset.material]} estrelas` : 'Berlinde desbloqueado';
+            });
+
+            const modeLabel = document.getElementById('race-mode-label');
+            if (modeLabel) modeLabel.textContent = gameMode === 'championship' ? `CAMPEONATO ${championshipRound + 1}/4 · ${championshipPoints} PTS` : 'CORRIDA RÁPIDA';
+            const startLabel = document.getElementById('start-button-label');
+            if (startLabel) startLabel.textContent = gameMode === 'championship' ? 'COMEÇAR CAMPEONATO' : 'JOGAR';
+            const description = document.getElementById('mode-description');
+            if (description) description.textContent = gameMode === 'championship'
+                ? `Campeonato: prova ${championshipRound + 1}/4 em ${trackNames[championshipOrder[championshipRound]]}. Pontos atuais: ${championshipPoints}.`
+                : 'Corrida rápida: escolhe um circuito e tenta melhorar estrelas, tempo e pontuação.';
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === gameMode));
+        }
+
         function updateTimeDisplays() {
             const current = gameState === 'racing'
                 ? performance.now() - raceStartTime
@@ -1447,6 +1617,7 @@
             if (menuBest) menuBest.textContent = bestRaceTime > 0 ? formatRaceTime(bestRaceTime) : '--:--.---';
             const menuBestScore = document.getElementById('menu-best-score');
             if (menuBestScore) menuBestScore.textContent = String(bestScore);
+            updateCareerUI();
         }
 
         function syncChoiceButtons() {
@@ -1454,9 +1625,39 @@
             document.querySelectorAll('.menu-marble-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.material === currentMaterial));
             document.querySelectorAll('.env-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.env === currentEnv));
             document.querySelectorAll('.marble-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.material === currentMaterial));
+            updateCareerUI();
         }
 
-        function selectEnvironment(env) {
+        function setMenuNotice(text) {
+            const el = document.getElementById('menu-lock-message');
+            if (!el) return;
+            el.textContent = text;
+            clearTimeout(setMenuNotice.timer);
+            setMenuNotice.timer = setTimeout(() => { el.textContent = ''; }, 3200);
+        }
+
+        function selectMode(mode) {
+            gameMode = mode === 'championship' ? 'championship' : 'quick';
+            championshipPoints = 0;
+            if (gameMode === 'championship') {
+                championshipRound = 0;
+                currentEnv = championshipOrder[0];
+                createEnvironment(currentEnv);
+                resetRace(false);
+            }
+            syncChoiceButtons();
+        }
+
+        function selectEnvironment(env, force = false) {
+            if (!force && gameMode === 'championship') {
+                setMenuNotice('🏆 No Campeonato, os circuitos são disputados pela ordem oficial.');
+                return;
+            }
+            if (!force && !isTrackUnlocked(env)) {
+                setMenuNotice(`🔒 ${trackNames[env]} requer ${trackUnlockStars[env]} estrelas. Atualmente tens ${totalCareerStars()}.`);
+                sound.playImpact(0.15);
+                return;
+            }
             currentEnv = env;
             createEnvironment(env);
             resetRace(false);
@@ -1464,6 +1665,11 @@
         }
 
         function selectMarble(type) {
+            if (!isMarbleUnlocked(type)) {
+                setMenuNotice(`🔐 Este berlinde requer ${marbleUnlockStars[type]} estrelas. Atualmente tens ${totalCareerStars()}.`);
+                sound.playImpact(0.15);
+                return;
+            }
             setMarbleMaterial(type);
             syncChoiceButtons();
         }
@@ -1474,6 +1680,7 @@
             raceFinished = false;
             document.getElementById('finish-screen')?.classList.add('hidden');
             document.getElementById('pause-screen')?.classList.add('hidden');
+            document.getElementById('btn-next-round')?.classList.add('hidden');
             const start = document.getElementById('start-screen');
             start?.classList.remove('hidden');
             updateTimeDisplays();
@@ -1482,6 +1689,10 @@
 
         function startCountdown() {
             const sequenceId = ++countdownSequenceId;
+            if (gameMode === 'championship') {
+                const officialEnv = championshipOrder[championshipRound];
+                if (currentEnv !== officialEnv) selectEnvironment(officialEnv, true);
+            }
             document.getElementById('start-screen')?.classList.add('hidden');
             document.getElementById('finish-screen')?.classList.add('hidden');
             document.getElementById('pause-screen')?.classList.add('hidden');
@@ -1519,6 +1730,31 @@
             });
         }
 
+        function calculateRaceStars() {
+            let stars = 1;
+            if (finalRacePosition <= 2 || score >= 2400) stars = 2;
+            if (finalRacePosition === 1 && score >= 3200) stars = 3;
+            return stars;
+        }
+
+        function advanceChampionship() {
+            if (gameMode !== 'championship') return;
+            const nextRound = championshipRound + 1;
+            if (nextRound >= championshipOrder.length) {
+                showMainMenu();
+                return;
+            }
+            const nextEnv = championshipOrder[nextRound];
+            if (!isTrackUnlocked(nextEnv)) {
+                setMenuNotice(`🔒 Conquista ${trackUnlockStars[nextEnv]} estrelas para avançar para ${trackNames[nextEnv]}.`);
+                showMainMenu();
+                return;
+            }
+            championshipRound = nextRound;
+            selectEnvironment(nextEnv, true);
+            startCountdown();
+        }
+
         function finishRace() {
             if (raceFinished) return;
             raceFinished = true;
@@ -1539,19 +1775,74 @@
                 localStorage.setItem('marbleRushBestScore', String(bestScore));
             }
 
+            lastEarnedStars = calculateRaceStars();
+            const previousStars = Number(career.trackStars[currentEnv] || 0);
+            const newStars = Math.max(0, lastEarnedStars - previousStars);
+            career.trackStars[currentEnv] = Math.max(previousStars, lastEarnedStars);
+            career.races = Number(career.races || 0) + 1;
+            if (finalRacePosition === 1) career.wins = Number(career.wins || 0) + 1;
+            const positionCoins = [0, 160, 110, 75, 50][finalRacePosition] || 40;
+            lastCoinReward = 35 + positionCoins + newStars * 100;
+            career.coins = Number(career.coins || 0) + lastCoinReward;
+
+            if (gameMode === 'championship') {
+                const points = [0, 10, 7, 5, 3][finalRacePosition] || 0;
+                championshipPoints += points;
+            }
+
+            const finalChampionshipRace = gameMode === 'championship' && championshipRound === championshipOrder.length - 1;
+            if (finalChampionshipRace) {
+                career.crowns = Number(career.crowns || 0) + 1;
+                career.coins += 500;
+                lastCoinReward += 500;
+            }
+            saveCareer();
+
             document.getElementById('finish-position').textContent = `${finalRacePosition}/4`;
             document.getElementById('finish-time').textContent = formatRaceTime(elapsedRaceTime);
             document.getElementById('finish-best').textContent = bestRaceTime ? formatRaceTime(bestRaceTime) : '--:--.---';
             document.getElementById('finish-score').textContent = String(score);
-            document.getElementById('finish-title').textContent = finalRacePosition === 1 ? '🏆 VITÓRIA!' : '🏁 META ALCANÇADA';
-            document.getElementById('finish-subtitle').textContent = finalRacePosition === 1
-                ? 'Dominaste o circuito do MARBLE RUSH™.'
-                : `Terminaste em ${finalRacePosition}. Afina a trajetória e tenta novamente.`;
-            document.getElementById('finish-kicker').textContent = finalRacePosition === 1 ? 'CAMPEÃO DO CIRCUITO' : 'CORRIDA CONCLUÍDA';
-            showRaceMessage(finalRacePosition === 1 ? '🏆 PRIMEIRO LUGAR!' : `META — ${finalRacePosition}.º LUGAR`, 3500);
+            document.getElementById('finish-stars').textContent = starText(lastEarnedStars);
+            document.getElementById('finish-reward').textContent = `+${lastCoinReward} 🪙`;
+
+            const nextButton = document.getElementById('btn-next-round');
+            const championshipLine = document.getElementById('finish-championship');
+            nextButton?.classList.add('hidden');
+            championshipLine?.classList.add('hidden');
+
+            if (finalChampionshipRace) {
+                document.getElementById('finish-title').textContent = '👑 CAMPEÃO MARBLE RUSH!';
+                document.getElementById('finish-subtitle').textContent = `Concluíste as quatro provas com ${championshipPoints} pontos e recebeste um bónus de 500 moedas.`;
+                document.getElementById('finish-kicker').textContent = 'CAMPEONATO CONCLUÍDO';
+                if (championshipLine) {
+                    championshipLine.textContent = `🏆 CLASSIFICAÇÃO FINAL · ${championshipPoints} PONTOS · TÍTULO Nº ${career.crowns}`;
+                    championshipLine.classList.remove('hidden');
+                }
+            } else {
+                document.getElementById('finish-title').textContent = finalRacePosition === 1 ? '🏆 VITÓRIA!' : '🏁 META ALCANÇADA';
+                document.getElementById('finish-subtitle').textContent = finalRacePosition === 1
+                    ? `Dominaste ${trackNames[currentEnv]} e conquistaste ${lastEarnedStars} estrela${lastEarnedStars === 1 ? '' : 's'}.`
+                    : `Terminaste em ${finalRacePosition}.º e conquistaste ${lastEarnedStars} estrela${lastEarnedStars === 1 ? '' : 's'}.`;
+                document.getElementById('finish-kicker').textContent = finalRacePosition === 1 ? 'CAMPEÃO DO CIRCUITO' : 'CORRIDA CONCLUÍDA';
+            }
+
+            if (gameMode === 'championship' && !finalChampionshipRace) {
+                const nextEnv = championshipOrder[championshipRound + 1];
+                const unlocked = isTrackUnlocked(nextEnv);
+                if (championshipLine) {
+                    championshipLine.textContent = `CAMPEONATO · ${championshipPoints} PONTOS · PRÓXIMA: ${trackNames[nextEnv]}${unlocked ? '' : ` · REQUER ${trackUnlockStars[nextEnv]} ⭐`}`;
+                    championshipLine.classList.remove('hidden');
+                }
+                if (unlocked) nextButton?.classList.remove('hidden');
+                else document.getElementById('finish-subtitle').textContent += ` Repete a prova para alcançar ${trackUnlockStars[nextEnv]} estrelas totais e desbloquear a próxima ronda.`;
+            }
+
+            showRaceMessage(finalChampionshipRace ? '👑 CAMPEONATO CONQUISTADO!' : finalRacePosition === 1 ? '🏆 PRIMEIRO LUGAR!' : `META — ${finalRacePosition}.º LUGAR`, 3500);
             updateTimeDisplays();
 
-            if (finalRacePosition === 1) {
+            if (finalChampionshipRace) {
+                speakAnnouncerLine('Momento histórico! O piloto conclui o Campeonato MARBLE RUSH e recebe a coroa de campeão!');
+            } else if (finalRacePosition === 1) {
                 speakAnnouncerLine('Vitória espetacular! O berlinde cruza a meta em primeiro lugar e conquista o circuito do MARBLE RUSH!');
             } else {
                 speakAnnouncerLine(`Corrida concluída em ${finalRacePosition}.º lugar! Uma nova tentativa pode mudar completamente o resultado!`);
@@ -1576,6 +1867,8 @@
             document.getElementById('race-position').textContent = `${Math.min(position, 4)}/4`;
             document.getElementById('race-lap').textContent = `${Math.min(raceLap, totalLaps)}/${totalLaps}`;
             document.getElementById('race-checkpoint').textContent = `${nextCheckpoint}/3`;
+            const modeLabel = document.getElementById('race-mode-label');
+            if (modeLabel) modeLabel.textContent = gameMode === 'championship' ? `CAMPEONATO ${championshipRound + 1}/4 · ${championshipPoints} PTS` : 'CORRIDA RÁPIDA';
             const scoreEl = document.getElementById('race-score');
             if (scoreEl) scoreEl.textContent = String(score);
             const orbsEl = document.getElementById('race-orbs');
@@ -2026,6 +2319,9 @@
         }
 
         function setupUIEventListeners() {
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => selectMode(btn.dataset.mode));
+            });
             document.querySelectorAll('.menu-env-btn').forEach(btn => {
                 btn.addEventListener('click', () => selectEnvironment(btn.dataset.env));
             });
@@ -2035,6 +2331,7 @@
             document.getElementById('btn-start-race').addEventListener('click', startCountdown);
             document.getElementById('btn-race-again').addEventListener('click', startCountdown);
             document.getElementById('btn-main-menu').addEventListener('click', showMainMenu);
+            document.getElementById('btn-next-round').addEventListener('click', advanceChampionship);
             document.getElementById('btn-pause').addEventListener('click', () => togglePause());
             document.getElementById('btn-resume-race').addEventListener('click', () => togglePause(true));
             document.getElementById('btn-pause-restart').addEventListener('click', startCountdown);
@@ -2184,6 +2481,7 @@
             setupPlayableControls();
             resetRace(false);
             syncChoiceButtons();
+            updateCareerUI();
             animate();
             setTimeout(() => {
                 document.getElementById('loading-screen')?.classList.add('hidden');
